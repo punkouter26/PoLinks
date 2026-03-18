@@ -29,25 +29,40 @@ public class TableStorageHealthCheck : IHealthCheck
     {
         try
         {
+            // Production path: managed identity via TableServiceUri (no connection string)
+            var tableServiceUri = _configuration["AzureStorage:TableServiceUri"];
+            if (!string.IsNullOrEmpty(tableServiceUri))
+            {
+                if (!Uri.TryCreate(tableServiceUri, UriKind.Absolute, out _))
+                {
+                    _logger.LogWarning("Table Storage service URI is invalid: {Uri}", tableServiceUri);
+                    return Task.FromResult(HealthCheckResult.Degraded("AzureStorage:TableServiceUri is not a valid URI"));
+                }
+
+                _logger.LogInformation("Table Storage health check passed (managed identity via TableServiceUri)");
+                return Task.FromResult(HealthCheckResult.Healthy("Table Storage is configured (managed identity)"));
+            }
+
+            // Local / legacy path: explicit connection string
             var connectionString = _configuration["AzureStorage:ConnectionString"] ??
                                    _configuration["AzureWebJobsStorage"] ??
                                    _configuration["TableStorage:ConnectionString"];
-            
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.LogWarning("Table Storage connection string not configured");
                 return Task.FromResult(HealthCheckResult.Degraded("Table Storage connection string not configured"));
             }
 
-            // Test connectivity by creating a service client - this validates connection string format
-            var tableServiceClient = new TableServiceClient(connectionString);
-            
             // Azurite development storage shorthand is valid; skip format validation for it
             if (connectionString.Equals("UseDevelopmentStorage=true", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Table Storage health check passed (Azurite development storage)");
                 return Task.FromResult(HealthCheckResult.Healthy("Table Storage is configured (Azurite development storage)"));
             }
+
+            // Test connectivity by creating a service client - this validates connection string format
+            _ = new TableServiceClient(connectionString);
 
             // Validate the connection string contains required components
             if (!connectionString.Contains("DefaultEndpointsProtocol") &&
