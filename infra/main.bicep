@@ -13,7 +13,7 @@ param sharedName string = 'poshared'
 param subscriptionId string = 'Bbb8dfbe-9169-432f-9b7a-fbf861b51037'
 
 @description('Primary app resource group name.')
-param appResourceGroupName string = 'rg-polinks-app-dev'
+param appResourceGroupName string = 'PoLinks'
 
 @description('Shared resource group name.')
 param sharedResourceGroupName string = 'rg-poshared-core-dev'
