@@ -55,6 +55,79 @@
   margin-top: 12px;
 }
 
+.sentimentMetrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 18px 0 16px;
+}
+
+.sentimentMetricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.sentimentMetricLabel {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sentimentMetricValue {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--colour-text-primary);
+}
+
+.sentimentProgressBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sentimentProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sentimentProgressTrack {
+  overflow: hidden;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  width: 100%;
+  appearance: none;
+}
+
+.sentimentProgressTrack::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.sentimentProgressTrack::-webkit-progress-value {
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.6), rgba(0, 245, 255, 0.95));
+}
+
+.sentimentProgressTrack::-moz-progress-bar {
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.6), rgba(0, 245, 255, 0.95));
+}
+
 .analyticsCard {
   display: flex;
   flex-direction: column;
@@ -335,6 +408,22 @@
 .statusCard[data-status="Unhealthy"] {
   border-color: var(--colour-neon-red, #ff6464);
   background: rgba(255, 100, 100, 0.12);
+}
+
+.statusCard[data-status="Degraded"] .sentimentProgressTrack::-webkit-progress-value {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.55), rgba(251, 191, 36, 0.95));
+}
+
+.statusCard[data-status="Degraded"] .sentimentProgressTrack::-moz-progress-bar {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.55), rgba(251, 191, 36, 0.95));
+}
+
+.statusCard[data-status="Unhealthy"] .sentimentProgressTrack::-webkit-progress-value {
+  background: linear-gradient(90deg, rgba(255, 100, 100, 0.55), rgba(255, 100, 100, 0.95));
+}
+
+.statusCard[data-status="Unhealthy"] .sentimentProgressTrack::-moz-progress-bar {
+  background: linear-gradient(90deg, rgba(255, 100, 100, 0.55), rgba(255, 100, 100, 0.95));
 }
 
 .statusCard[data-status="Healthy"]   .statusBadge,

@@ -100,6 +100,8 @@ try
     builder.Services.Configure<ConstellationOptions>(builder.Configuration.GetSection(ConstellationOptions.Section));
     builder.Services.AddSingleton<ConstellationService>();
     builder.Services.AddSingleton<ISentimentAnalyzer, LanguageSentimentService>();
+    // Expose the same singleton via ISentimentStatus so the diagnostic endpoint can read guardrail state.
+    builder.Services.AddSingleton<ISentimentStatus>(sp => (ISentimentStatus)sp.GetRequiredService<ISentimentAnalyzer>());
     builder.Services.AddHostedService<BlueskyJetstreamWorker>();
     builder.Services.AddSingleton<IMockDataService, DefaultMockDataService>();
     builder.Services.AddHostedService<PulseService>();

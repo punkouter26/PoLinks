@@ -11,7 +11,7 @@ erDiagram
         string anchorId FK
         string label
         decimal hypeScore
-        string status
+        string status "ACTIVE | FADING | EVICTED | EXPIRED"
         datetime firstSeenAt
         datetime expiresAt
     }
@@ -38,22 +38,22 @@ erDiagram
         string linkedNodeId FK
         decimal impactScore
         decimal sentimentScore
-        string sentiment
+        string sentiment "NEG | NEUTRAL | POS"
         datetime createdAt
     }
 
     PULSE_BATCH {
         string id PK
         datetime firedAt
-        string mostActiveNodeId
+        string mostActiveNodeId FK
         bool isSimulated
     }
 
     NODE_STATE_TRANSITION {
         string id PK
         string nodeId FK
-        string fromStatus
-        string toStatus
+        string fromStatus "ACTIVE | FADING | EVICTED | EXPIRED"
+        string toStatus "ACTIVE | FADING | EVICTED | EXPIRED"
         datetime changedAt
         string reason
     }
@@ -61,18 +61,15 @@ erDiagram
     DIAGNOSTIC_LOG {
         string correlationId PK
         datetime timestamp
-        string level
+        string level "DBG | INF | WRN | ERR"
         string route
         string message
     }
 
-    ANCHOR ||--o{ SUPER_HUB : seeds
-    SUPER_HUB ||--o{ LINK : source_or_target
-    SUPER_HUB ||--o{ POST : influenced_by
-    AUTHOR ||--o{ POST : publishes
-    PULSE_BATCH ||--o{ SUPER_HUB : emits_updates
-    SUPER_HUB ||--o{ NODE_STATE_TRANSITION : transitions
-
-    %% enum semantics:
-    %% SUPER_HUB.status = ACTIVE | FADING | EVICTED | EXPIRED
-    %% NODE_STATE_TRANSITION.toStatus follows lifecycle above
+    ANCHOR ||--o{ SUPER_HUB : "seeds"
+    SUPER_HUB ||--o{ LINK : "source_or_target"
+    SUPER_HUB ||--o{ POST : "influenced_by"
+    AUTHOR ||--o{ POST : "publishes"
+    PULSE_BATCH ||--o{ SUPER_HUB : "emits_updates"
+    SUPER_HUB ||--o{ NODE_STATE_TRANSITION : "transitions"
+    SUPER_HUB }o--|| PULSE_BATCH : "most_active_in"

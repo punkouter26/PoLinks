@@ -23,17 +23,37 @@ public interface ISentimentAnalyzer
 }
 
 /// <summary>
+/// Read-only view of the sentiment service's current guardrail state.
+/// Used by the diagnostic endpoint to surface quota and circuit-breaker status.
+/// </summary>
+public interface ISentimentStatus
+{
+    /// <summary>Returns a point-in-time snapshot of quota consumption and circuit state.</summary>
+    SentimentStatusSnapshot GetStatus();
+}
+
+/// <summary>Snapshot of sentiment service cost-guardrail state at a point in time.</summary>
+public sealed record SentimentStatusSnapshot(
+    bool CircuitOpen,
+    int UsedToday,
+    int Cap,
+    string EstimatedDailyCost,
+    DateTimeOffset AsOfUtc);
+
+/// <summary>
 /// Azure AI Language implementation of <see cref="ISentimentAnalyzer"/>.
 /// Uses <see cref="TextAnalyticsClient.AnalyzeSentimentBatchAsync"/> (≤25 docs per call).
 /// <para>Cost guardrails:
 /// <list type="bullet">
 ///   <item>Hard daily cap (default 3,000 text records ≈ $0.90/day at $3/10 k) resets at UTC midnight.</item>
 ///   <item>Posts beyond the cap receive <see cref="SentimentLabel.Neutral"/> without an API call.</item>
+///   <item>Circuit-breaker: on HTTP 429/403 quota-exhaustion the service disables itself
+///         until the next UTC day, logging a single Error entry instead of per-batch warnings.</item>
 /// </list></para>
 /// Falls back to <see cref="SentimentLabel.Neutral"/> on any API error so the ingestion
 /// pipeline is never blocked by a transient Language service failure.
 /// </summary>
-public sealed class LanguageSentimentService : ISentimentAnalyzer
+public sealed class LanguageSentimentService : ISentimentAnalyzer, ISentimentStatus
 {
     private readonly TextAnalyticsClient _client;
     private readonly ILogger<LanguageSentimentService> _logger;
@@ -43,6 +63,10 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer
     private readonly object _capLock = new();
     private int _dailyCallCount;
     private DateTime _dailyWindowStart = DateTime.UtcNow.Date;
+
+    // Circuit-breaker: set when Azure returns quota-exhausted (HTTP 403/429).
+    // Re-arms automatically when the UTC day rolls over (same window as the daily cap).
+    private bool _quotaCircuitOpen;
 
     public LanguageSentimentService(IConfiguration configuration, ILogger<LanguageSentimentService> logger)
     {
@@ -100,6 +124,13 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer
             return result;
         }
         catch (OperationCanceledException) { throw; }
+        catch (Azure.RequestFailedException rfex) when (rfex.Status is 403 or 429)
+        {
+            // Azure quota exhausted (F0 monthly cap or rate limit).
+            // Open the circuit-breaker so we stop hammering the API until the next UTC day.
+            OpenQuotaCircuit(rfex);
+            return neutral;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
@@ -109,8 +140,40 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer
         }
     }
 
+    private void OpenQuotaCircuit(Azure.RequestFailedException ex)
+    {
+        lock (_capLock)
+        {
+            if (_quotaCircuitOpen) return; // already open — suppress duplicate logs
+            _quotaCircuitOpen = true;
+        }
+        _logger.LogError(ex,
+            "Azure AI Language quota exhausted (HTTP {Status}). " +
+            "Sentiment analysis is disabled until UTC midnight to prevent log spam. " +
+            "Upgrade from the F0 free tier or reduce SentimentSampleRate to avoid this.",
+            ex.Status);
+    }
+
+    /// <inheritdoc/>
+    public SentimentStatusSnapshot GetStatus()
+    {
+        lock (_capLock)
+        {
+            // $3 per 10,000 records (Azure AI Language S tier)
+            var estimatedCost = _dailyCallCount / 10_000.0 * 3.0;
+            return new SentimentStatusSnapshot(
+                CircuitOpen: _quotaCircuitOpen,
+                UsedToday: _dailyCallCount,
+                Cap: _dailyCap,
+                EstimatedDailyCost: $"${estimatedCost:F3}",
+                AsOfUtc: DateTimeOffset.UtcNow);
+        }
+    }
+
     // Returns true and charges `count` records against today's daily quota.
     // Resets automatically when the UTC calendar day rolls over.
+    // Also re-arms the quota circuit-breaker on day rollover (F0 monthly quota resets once/month,
+    // but we re-arm daily so transient 429s don't permanently disable the service).
     private bool TryConsumeQuota(int count)
     {
         lock (_capLock)
@@ -123,7 +186,11 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer
                     _dailyCallCount, _dailyCap);
                 _dailyCallCount = 0;
                 _dailyWindowStart = today;
+                _quotaCircuitOpen = false; // re-arm circuit-breaker each UTC day
             }
+
+            if (_quotaCircuitOpen)
+                return false;
 
             if (_dailyCallCount + count > _dailyCap)
                 return false;

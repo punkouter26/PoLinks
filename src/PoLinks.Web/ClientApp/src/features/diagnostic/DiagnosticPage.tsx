@@ -72,6 +72,88 @@ interface AnalyticsData {
   countsByAnchor: Record<string, number>;
 }
 
+interface SentimentStatusData {
+  circuitOpen: boolean;
+  usedToday: number;
+  cap: number;
+  estimatedDailyCost: string;
+  asOfUtc: string;
+}
+
+function SentimentStatusSection() {
+  const [data, setData] = useState<SentimentStatusData | null>(null);
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch('/diagnostic/sentiment-status', { signal: ctrl.signal })
+      .then((r) => r.ok ? (r.json() as Promise<SentimentStatusData>) : Promise.reject())
+      .then(setData)
+      .catch((error: unknown) => {
+        if ((error as Error).name !== 'AbortError') {
+          setErr(true);
+        }
+      });
+    return () => ctrl.abort();
+  }, []);
+
+  if (err || !data) return null;
+
+  const usageRatio = data.cap > 0 ? data.usedToday / data.cap : 0;
+  const usagePercent = Math.min(100, Math.round(usageRatio * 100));
+  const status = data.circuitOpen ? 'Unhealthy' : usageRatio >= 0.8 ? 'Degraded' : 'Healthy';
+
+  return (
+    <section className={styles.section} data-testid="sentiment-status-section">
+      <div className={styles.sectionHeader}>
+        <h2>Sentiment Service</h2>
+        <span className={styles.totalBadge}>{data.estimatedDailyCost} today</span>
+      </div>
+
+      <div className={`${styles.statusCard} ${styles.overall}`} data-status={status}>
+        <div className={styles.statusContent}>
+          <div className={styles.statusBadge}>
+            <span className={styles.statusIcon}>{data.circuitOpen ? '✕' : usageRatio >= 0.8 ? '⚠' : '✓'}</span>
+            <span>{data.circuitOpen ? 'Circuit Open' : 'Quota Guard Active'}</span>
+          </div>
+          <div className={styles.statusMeta}>
+            <span className={styles.duration}>{data.usedToday.toLocaleString()} / {data.cap.toLocaleString()}</span>
+            <span>{new Date(data.asOfUtc).toLocaleTimeString()}</span>
+          </div>
+        </div>
+
+        <div className={styles.sentimentMetrics}>
+          <div className={styles.sentimentMetricCard}>
+            <span className={styles.sentimentMetricLabel}>Daily Calls</span>
+            <strong className={styles.sentimentMetricValue}>{data.usedToday.toLocaleString()}</strong>
+          </div>
+          <div className={styles.sentimentMetricCard}>
+            <span className={styles.sentimentMetricLabel}>Daily Cap</span>
+            <strong className={styles.sentimentMetricValue}>{data.cap.toLocaleString()}</strong>
+          </div>
+          <div className={styles.sentimentMetricCard}>
+            <span className={styles.sentimentMetricLabel}>Usage</span>
+            <strong className={styles.sentimentMetricValue}>{usagePercent}%</strong>
+          </div>
+        </div>
+
+        <div className={styles.sentimentProgressBlock}>
+          <div className={styles.sentimentProgressHeader}>
+            <span>Quota consumption</span>
+            <span>{usagePercent}%</span>
+          </div>
+          <progress
+            className={styles.sentimentProgressTrack}
+            aria-label="Sentiment quota usage"
+            max={data.cap}
+            value={data.usedToday}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function AnalyticsSummarySection() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [err, setErr] = useState(false);
@@ -284,6 +366,8 @@ export const DiagnosticPage: React.FC = () => {
           </>
         ) : null}
       </section>
+
+      <SentimentStatusSection />
 
       {/* Configuration Section */}
       <section className={styles.section} data-testid="config-section">

@@ -2,6 +2,7 @@
 // Posts arrive already sorted descending by impactScore from the server.
 import { useState, type CSSProperties } from "react";
 import type { InsightPost } from "../../types/nexus";
+import { useBlueskyHandle } from "./useBlueskyHandle";
 import styles from "./ImpactFeedList.module.css";
 
 interface ImpactFeedListProps {
@@ -31,6 +32,16 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function AuthorHandle({ did }: { did: string }) {
+  const handle = useBlueskyHandle(did);
+
+  return (
+    <span className={styles.authorDid} title={did}>
+      {handle}
+    </span>
+  );
+}
+
 export function ImpactFeedList({ posts }: ImpactFeedListProps) {
   if (posts.length === 0) {
     return <p className={styles.emptyText}>No recent posts for this node.</p>;
@@ -46,9 +57,7 @@ export function ImpactFeedList({ posts }: ImpactFeedListProps) {
           style={{ borderLeft: `3px solid ${post.sentimentColour}`, '--item-index': index } as CSSProperties}
         >
           <div className={styles.itemHeader}>
-            <span className={styles.authorDid} title={post.authorDid}>
-              {post.authorDid.length > 20 ? `…${post.authorDid.slice(-18)}` : post.authorDid}
-            </span>
+            <AuthorHandle did={post.authorDid} />
 
             <CopyButton text={post.text} />
             <div className={styles.badges}>

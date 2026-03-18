@@ -1,0 +1,72 @@
+flowchart TD
+    LAND["Landing Page\nConstellation renders immediately"]
+    GUEST["Guest Mode\nRead-only live canvas"]
+    AUTH_PROMPT["Auth Prompt\nFederated login optional"]
+    AUTHED["Authenticated User\nFull interaction unlocked"]
+
+    subgraph Explore["Explore Constellation"]
+        BROWSE["Browse live node clusters"]
+        NODE_CLICK["Click a SuperHub node"]
+        INSIGHT["Insight panel opens\nSemantic roots + sentiment posts"]
+        FOCUS_Q["Apply Focus Mode?\nIsolate anchor subgraph"]
+        FOCUS["Focus Mode Active\nFiltered constellation view"]
+        GHOST_Q["Enable Ghost Overlay?\nShort-term historical delta"]
+        GHOST["Ghost layer rendered\nAnchor history visible"]
+    end
+
+    subgraph Capture["Capture + Export"]
+        SNAP_CLICK["Trigger Snapshot"]
+        META["Fetch export metadata\nGET /api/snapshot/export-metadata"]
+        CLIENT_CAP["Client canvas capture\nHigh-res PNG"]
+        DOWNLOAD["Download / Share artifact"]
+    end
+
+    subgraph Operate["Operational Surface"]
+        DIAG["Open Diagnostic Dashboard"]
+        HEALTH["Health check status\nGET /diagnostic/health"]
+        CONFIG["Config visibility\nGET /diagnostic/config (masked)"]
+        LOGS["Live log stream\nGET /diagnostic/logs"]
+        UPTIME["Uptime analytics\nGET /diagnostic/uptime"]
+    end
+
+    LAND --> GUEST
+    GUEST --> AUTH_PROMPT
+    AUTH_PROMPT -->|Login| AUTHED
+    AUTH_PROMPT -->|Skip| BROWSE
+    AUTHED --> BROWSE
+
+    BROWSE --> NODE_CLICK --> INSIGHT
+    INSIGHT --> FOCUS_Q
+    FOCUS_Q -->|Yes| FOCUS --> GHOST_Q
+    FOCUS_Q -->|No| GHOST_Q
+    GHOST_Q -->|Yes| GHOST --> SNAP_CLICK
+    GHOST_Q -->|No| SNAP_CLICK
+
+    SNAP_CLICK --> META --> CLIENT_CAP --> DOWNLOAD
+
+    BROWSE --> DIAG
+    DIAG --> HEALTH
+    DIAG --> CONFIG
+    DIAG --> LOGS
+    DIAG --> UPTIME
+
+    style LAND fill:#0f172a,stroke:#38bdf8,color:#fff
+    style GUEST fill:#1e293b,stroke:#93c5fd,color:#fff
+    style AUTH_PROMPT fill:#14532d,stroke:#86efac,color:#fff
+    style AUTHED fill:#052e16,stroke:#4ade80,color:#fff
+    style BROWSE fill:#1e3a5f,stroke:#7dd3fc,color:#fff
+    style NODE_CLICK fill:#3b1a6e,stroke:#c084fc,color:#fff
+    style INSIGHT fill:#172554,stroke:#60a5fa,color:#fff
+    style FOCUS_Q fill:#374151,stroke:#d1d5db,color:#fff
+    style FOCUS fill:#1c3344,stroke:#38bdf8,color:#fff
+    style GHOST_Q fill:#374151,stroke:#d1d5db,color:#fff
+    style GHOST fill:#2d2d2d,stroke:#9ca3af,color:#fff
+    style SNAP_CLICK fill:#134e4a,stroke:#5eead4,color:#fff
+    style META fill:#0c4a6e,stroke:#67e8f9,color:#fff
+    style CLIENT_CAP fill:#1f2937,stroke:#d1d5db,color:#fff
+    style DOWNLOAD fill:#14532d,stroke:#6ee7b7,color:#fff
+    style DIAG fill:#1f2937,stroke:#34d399,color:#fff
+    style HEALTH fill:#064e3b,stroke:#34d399,color:#fff
+    style CONFIG fill:#1e293b,stroke:#fdba74,color:#fff
+    style LOGS fill:#450a0a,stroke:#fca5a5,color:#fff
+    style UPTIME fill:#111827,stroke:#a78bfa,color:#fff

@@ -52,6 +52,24 @@ function createMockResponse(url: URL, method: string): Response | null {
     });
   }
 
+  if (pathname === "/diagnostic/analytics") {
+    return jsonResponse({
+      date: new Date().toISOString().slice(0, 10),
+      totalPosts: 0,
+      countsByAnchor: {},
+    });
+  }
+
+  if (pathname === "/diagnostic/sentiment-status") {
+    return jsonResponse({
+      circuitOpen: false,
+      usedToday: 0,
+      cap: 3000,
+      estimatedDailyCost: "$0.000",
+      asOfUtc: new Date().toISOString(),
+    });
+  }
+
   if (pathname === "/api/constellation/focus-mode/status") {
     return jsonResponse(defaultFocusStatus);
   }

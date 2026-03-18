@@ -45,6 +45,7 @@
   flex-shrink: 0;
   opacity: 0.9;
   color: var(--panel-accent, var(--colour-neon-cyan));
+  pointer-events: none;
 }
 
 .title {

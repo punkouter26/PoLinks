@@ -239,12 +239,10 @@ public sealed class JetstreamOptions
     /// </summary>
     public int SentimentSampleRate { get; set; } = 10;
 
-    public IReadOnlyList<AnchorConfig> Anchors { get; set; } =
-    [
-        new AnchorConfig { AnchorId = "robotics",  Keywords = ["robotics","robot","ROS2","servo"] },
-        new AnchorConfig { AnchorId = "dronetech", Keywords = ["drone","UAV","quadcopter"] },
-        new AnchorConfig { AnchorId = "ai",        Keywords = ["AI","machine learning","LLM"] },
-        new AnchorConfig { AnchorId = "autonomy",  Keywords = ["autonomous","self-driving","SLAM"] },
-        new AnchorConfig { AnchorId = "sensors",   Keywords = ["lidar","camera sensor","IMU"] },
-    ];
+    /// <summary>
+    /// Anchor definitions are loaded exclusively from appsettings.json / Key Vault.
+    /// No in-code defaults — prevents stale keyword lists from silently merging with
+    /// the configuration-bound values when IOptions binding evaluates the class initializer.
+    /// </summary>
+    public IReadOnlyList<AnchorConfig> Anchors { get; set; } = [];
 }

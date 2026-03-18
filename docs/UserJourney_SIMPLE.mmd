@@ -1,0 +1,14 @@
+flowchart LR
+    LAND["Land"] --> BROWSE["Browse Constellation"]
+    BROWSE --> CLICK["Click Node"] --> INSIGHT["Insight Panel"]
+    INSIGHT --> FOCUS["Focus Mode"]
+    INSIGHT --> SNAP["Snapshot Export"]
+    BROWSE --> DIAG["Diagnostics"]
+
+    style LAND fill:#0f172a,stroke:#38bdf8,color:#fff
+    style BROWSE fill:#1e293b,stroke:#7dd3fc,color:#fff
+    style CLICK fill:#3b1a6e,stroke:#c084fc,color:#fff
+    style INSIGHT fill:#172554,stroke:#60a5fa,color:#fff
+    style FOCUS fill:#1c3344,stroke:#38bdf8,color:#fff
+    style SNAP fill:#134e4a,stroke:#5eead4,color:#fff
+    style DIAG fill:#1f2937,stroke:#34d399,color:#fff

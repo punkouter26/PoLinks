@@ -48,6 +48,42 @@ function getCanvasTheme(): CanvasTheme {
   };
 }
 
+function getAnchorLabelLines(ctx: CanvasRenderingContext2D, label: string, maxWidth: number): string[] {
+  const trimmedLabel = label.trim();
+  if (trimmedLabel.length === 0 || ctx.measureText(trimmedLabel).width <= maxWidth) {
+    return [trimmedLabel];
+  }
+
+  const words = trimmedLabel.split(/\s+/);
+  if (words.length < 2) {
+    return [trimmedLabel];
+  }
+
+  const lines: string[] = [];
+  let currentLine = words[0];
+
+  for (let index = 1; index < words.length; index += 1) {
+    const nextLine = `${currentLine} ${words[index]}`;
+    const remainingWords = words.length - index;
+
+    if (ctx.measureText(nextLine).width <= maxWidth || lines.length === 1 || remainingWords === 1) {
+      currentLine = nextLine;
+      continue;
+    }
+
+    lines.push(currentLine);
+    currentLine = words[index];
+  }
+
+  lines.push(currentLine);
+
+  if (lines.length <= 2) {
+    return lines;
+  }
+
+  return [lines[0], lines.slice(1).join(" ")];
+}
+
 export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -208,7 +244,10 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
           ctx.fillStyle = theme.colourTextPrimary;
           ctx.font = `12px ${theme.fontMono}`;
           ctx.textAlign = "center";
-          ctx.fillText(node.label, nx, ny + r + 15);
+          const labelLines = getAnchorLabelLines(ctx, node.label, 96);
+          labelLines.forEach((line, index) => {
+            ctx.fillText(line, nx, ny + r + 15 + index * 13);
+          });
         }
         ctx.shadowBlur = 0;
 

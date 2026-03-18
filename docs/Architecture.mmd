@@ -2,40 +2,47 @@ flowchart LR
     U["Research User"]
 
     subgraph Edge["Edge Delivery"]
-        FD["Azure Front Door"]
+        FD["Azure Front Door\nCDN · WAF · TLS"]
     end
 
     subgraph AppTier["Application Tier"]
-        APP["Azure App Service\nPoLinks.Web + React SPA"]
-        KV["Azure Key Vault\nShared Secrets"]
+        APP["PoLinks.Web\n.NET 10 API + React SPA"]
+        HUB["SignalR PulseHub\n10-second broadcast"]
+        WORKER["JetstreamWorker\nBackgroundService"]
+        KV["Azure Key Vault\nManaged Identity + RBAC"]
     end
 
     subgraph DataTier["Data Tier"]
         SQL["Azure SQL Database\nRelational State"]
-        REDIS["Azure Cache for Redis\nPulse Cache"]
+        REDIS["Azure Cache for Redis\nPulse Batch Cache"]
         TABLE["Azure Table Storage\nTime-Series Posts"]
     end
 
-    subgraph External["External Data Providers"]
-        JET["Bluesky Jetstream WebSocket"]
-        BSKYAPI["Bluesky REST API\nProfile/Follower Enrichment"]
+    subgraph Ext["External Providers"]
+        JET["Bluesky Jetstream\nWebSocket Firehose"]
+        BSKY["Bluesky REST API\nProfile Enrichment"]
     end
 
     U -->|HTTPS| FD
-    FD -->|HTTPS| APP
-    APP -->|Managed Identity + RBAC| KV
-    APP -->|SQL over TLS| SQL
-    APP -->|Cache Reads/Writes| REDIS
-    APP -->|Daily Partitions + Retention| TABLE
-    JET -->|Streaming Posts| APP
-    BSKYAPI -->|Authority Metadata| APP
+    FD -->|Route + Proxy| APP
+    APP -->|Broadcasts| HUB
+    HUB -->|SignalR Push| U
+    WORKER -->|Enqueue Posts| APP
+    WORKER -->|Subscribe| JET
+    APP -->|Enrich Profiles| BSKY
+    APP -->|EF Core TLS| SQL
+    APP -->|IDistributedCache| REDIS
+    APP -->|TableClient Partitions| TABLE
+    APP -->|RBAC Secrets| KV
 
     style U fill:#0a192f,stroke:#64ffda,color:#fff
     style FD fill:#102a43,stroke:#2cb1bc,color:#fff
     style APP fill:#243b53,stroke:#f0b429,color:#fff
+    style HUB fill:#312e81,stroke:#a5b4fc,color:#fff
+    style WORKER fill:#1e3a5f,stroke:#93c5fd,color:#fff
     style KV fill:#1f2937,stroke:#34d399,color:#fff
     style SQL fill:#3b0764,stroke:#c084fc,color:#fff
     style REDIS fill:#7f1d1d,stroke:#f87171,color:#fff
     style TABLE fill:#14532d,stroke:#86efac,color:#fff
     style JET fill:#3f3f46,stroke:#a1a1aa,color:#fff
-    style BSKYAPI fill:#0f172a,stroke:#93c5fd,color:#fff
+    style BSKY fill:#0f172a,stroke:#93c5fd,color:#fff

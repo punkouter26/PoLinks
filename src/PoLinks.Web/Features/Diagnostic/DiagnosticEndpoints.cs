@@ -1,6 +1,7 @@
 // T052: Diagnostic route endpoints for health checks and configuration validation
 // Provides routes for deep health checking and safe configuration inspection
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using PoLinks.Web.Features.Ingestion;
 using PoLinks.Web.Features.Shared.Masking;
 using PoLinks.Web.Infrastructure.TableStorage;
 
@@ -46,6 +47,14 @@ public sealed record DiagnosticAnalyticsDto(
     IReadOnlyDictionary<string, int> CountsByAnchor,
     DateTimeOffset AsOfUtc);
 
+/// <summary>Sentiment API guardrail state — circuit-breaker and daily quota consumption.</summary>
+public sealed record DiagnosticSentimentStatusDto(
+    bool CircuitOpen,
+    int UsedToday,
+    int Cap,
+    string EstimatedDailyCost,
+    DateTimeOffset AsOfUtc);
+
 public static class DiagnosticEndpoints
 {
     public static IEndpointRouteBuilder MapDiagnosticEndpoints(this IEndpointRouteBuilder app)
@@ -82,7 +91,12 @@ public static class DiagnosticEndpoints
            .WithTags("Diagnostic")
            .Produces<DiagnosticAnalyticsDto>(StatusCodes.Status200OK);
 
-        return app;
+          app.MapGet("/diagnostic/sentiment-status", GetSentimentStatus)
+              .WithName("GetSentimentStatus")
+              .WithTags("Diagnostic")
+              .Produces<DiagnosticSentimentStatusDto>(StatusCodes.Status200OK);
+
+          return app;
     }
 
     /// <summary>
@@ -237,5 +251,16 @@ public static class DiagnosticEndpoints
         var counts  = await storage.GetDailyCountsAsync(today, ct);
         var total   = counts.Values.Sum();
         return TypedResults.Ok(new DiagnosticAnalyticsDto(today, total, counts, DateTimeOffset.UtcNow));
+    }
+
+    private static IResult GetSentimentStatus(ISentimentStatus sentimentStatus)
+    {
+        var snapshot = sentimentStatus.GetStatus();
+        return TypedResults.Ok(new DiagnosticSentimentStatusDto(
+            snapshot.CircuitOpen,
+            snapshot.UsedToday,
+            snapshot.Cap,
+            snapshot.EstimatedDailyCost,
+            snapshot.AsOfUtc));
     }
 }

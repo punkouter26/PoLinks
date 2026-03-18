@@ -1,53 +1,60 @@
 flowchart TB
     subgraph Journey["User Journey + Auth"]
         START["User Opens PoLinks"]
-        NAV["Front Door Routes Request"]
-        APP["App Service Serves SPA"]
-        AUTH["Auth Context Resolved\n(Guest or Federated)"]
-        DASH["Dashboard Loaded"]
+        FD["Front Door Routes Request"]
+        SPA["SPA Loads from wwwroot"]
+        AUTH["Auth Context Resolved\nGuest or Federated"]
+        DASH["Dashboard + Constellation Ready"]
     end
 
-    subgraph PulsePipeline["Realtime + Data Pipeline"]
-        JET["Jetstream Events"]
-        ENRICH["Follower Enrichment"]
-        SCORE["Hype + Sentiment Scoring"]
-        PULSE["Pulse Batch Assembly"]
-        HUB["SignalR Pulse Hub"]
-        UI["Canvas Re-render + Insight Panel"]
+    subgraph Pipeline["Realtime Data Pipeline"]
+        JET["Jetstream Post Event"]
+        ENRICH["Profile + Sentiment Enrichment"]
+        HYPE["HypeScore + NodeCapEnforcer"]
+        PERSIST["SQL + Redis + Table Storage"]
+        PULSE["PulseService 10s Assembly"]
+        HUB["SignalR PulseHub Fan-Out"]
+        CANVAS["Constellation Canvas Re-render"]
     end
 
-    subgraph CrudFlow["Primary CRUD Processing"]
-        CREATE["Create Focus Context"]
-        READ["Read Insight + Diagnostic"]
-        UPDATE["Update Focus/Filters"]
+    subgraph CRUD["Primary CRUD Flows"]
+        FOCUS["Create / Update Focus Context"]
+        INSIGHT["Read Insight + Semantic Roots"]
+        GHOST["Toggle Ghost Overlay"]
         EXPORT["Export Snapshot Metadata"]
-        LOGS["Diagnostic Logs + Correlation IDs"]
+        DIAG["Diagnostic Health · Config · Logs"]
+        SIM["Simulation Mode\nReplay synthetic pulse"]
     end
 
-    START --> NAV --> APP --> AUTH --> DASH
-    DASH --> READ
-    DASH --> CREATE
-    CREATE --> UPDATE
-    UPDATE --> READ
-    READ --> EXPORT
-    READ --> LOGS
+    START --> FD --> SPA --> AUTH --> DASH
+    DASH --> FOCUS
+    DASH --> INSIGHT
+    DASH --> GHOST
+    DASH --> EXPORT
+    DASH --> DIAG
+    DASH --> SIM
 
-    JET --> ENRICH --> SCORE --> PULSE --> HUB --> UI
-    UI --> READ
+    FOCUS --> INSIGHT
+    INSIGHT --> EXPORT
+
+    JET --> ENRICH --> HYPE --> PERSIST --> PULSE --> HUB --> CANVAS
+    CANVAS --> INSIGHT
 
     style START fill:#0f172a,stroke:#38bdf8,color:#fff
-    style NAV fill:#1e293b,stroke:#7dd3fc,color:#fff
-    style APP fill:#334155,stroke:#fbbf24,color:#fff
+    style FD fill:#102a43,stroke:#7dd3fc,color:#fff
+    style SPA fill:#1e293b,stroke:#fbbf24,color:#fff
     style AUTH fill:#14532d,stroke:#86efac,color:#fff
     style DASH fill:#4c1d95,stroke:#c4b5fd,color:#fff
     style JET fill:#111827,stroke:#93c5fd,color:#fff
     style ENRICH fill:#0c4a6e,stroke:#67e8f9,color:#fff
-    style SCORE fill:#3f3f46,stroke:#d4d4d8,color:#fff
+    style HYPE fill:#3f3f46,stroke:#d4d4d8,color:#fff
+    style PERSIST fill:#172554,stroke:#818cf8,color:#fff
     style PULSE fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style HUB fill:#312e81,stroke:#a5b4fc,color:#fff
-    style UI fill:#3b0764,stroke:#d8b4fe,color:#fff
-    style CREATE fill:#052e16,stroke:#4ade80,color:#fff
-    style READ fill:#172554,stroke:#60a5fa,color:#fff
-    style UPDATE fill:#78350f,stroke:#fcd34d,color:#fff
+    style CANVAS fill:#3b0764,stroke:#d8b4fe,color:#fff
+    style FOCUS fill:#052e16,stroke:#4ade80,color:#fff
+    style INSIGHT fill:#172554,stroke:#60a5fa,color:#fff
+    style GHOST fill:#2d2d2d,stroke:#9ca3af,color:#fff
     style EXPORT fill:#134e4a,stroke:#5eead4,color:#fff
-    style LOGS fill:#450a0a,stroke:#f87171,color:#fff
+    style DIAG fill:#1f2937,stroke:#34d399,color:#fff
+    style SIM fill:#292524,stroke:#fdba74,color:#fff

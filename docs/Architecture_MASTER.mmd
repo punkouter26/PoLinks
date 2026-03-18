@@ -1,0 +1,36 @@
+C4Context
+    title PoLinks — System Context (C4 L1) + Container (C4 L2)
+
+    Person(user, "Research User", "Analyst, Engineer, or Strategist tracking robotics discourse")
+
+    System_Boundary(polinks, "PoLinks Platform") {
+        Container(spa, "React SPA", "Vite + TypeScript", "Constellation canvas, Insight panel, Diagnostic dashboard, Snapshot export")
+        Container(api, "PoLinks.Web API", ".NET 10 Minimal API", "VSA features: Ingestion, Constellation, Pulse, Snapshot, Diagnostic, Simulation")
+        Container(hub, "SignalR PulseHub", "ASP.NET Core SignalR", "Fans out 10-second pulse batches to all connected clients")
+        Container(worker, "JetstreamWorker", "BackgroundService", "Maintains WebSocket connection to Bluesky Jetstream; enqueues posts")
+    }
+
+    System_Boundary(azure, "Azure Infrastructure") {
+        ContainerDb(sql, "Azure SQL Database", "Relational", "Anchor, SuperHub, Link, Author, Post, NodeStateTransition")
+        ContainerDb(redis, "Azure Cache for Redis", "Key-Value Cache", "Pulse batch cache; hype score acceleration")
+        ContainerDb(table, "Azure Table Storage", "Time-Series", "Daily-partitioned raw posts; retention-managed")
+        Container(kv, "Azure Key Vault", "Secrets", "Connection strings and API keys via Managed Identity + RBAC")
+        Container(fd, "Azure Front Door", "CDN + WAF", "Global edge routing; TLS termination; DDoS protection")
+    }
+
+    System_Ext(jetstream, "Bluesky Jetstream", "WebSocket streaming firehose of public Bluesky posts")
+    System_Ext(bskyapi, "Bluesky REST API", "Profile, follower, and authority metadata enrichment")
+
+    Rel(user, fd, "HTTPS")
+    Rel(fd, spa, "Serves static bundle + proxies API calls")
+    Rel(spa, api, "REST + WebSocket /hubs/pulse")
+    Rel(api, spa, "Serves SPA from wwwroot")
+    Rel(api, hub, "Broadcasts pulse batches")
+    Rel(hub, spa, "SignalR push")
+    Rel(worker, api, "Enqueues ingested posts")
+    Rel(worker, jetstream, "WebSocket subscribe")
+    Rel(api, bskyapi, "HTTP profile enrichment")
+    Rel(api, sql, "EF Core / ADO over TLS")
+    Rel(api, redis, "IDistributedCache reads/writes")
+    Rel(api, table, "TableClient daily partitions")
+    Rel(api, kv, "Managed Identity + RBAC secrets")
