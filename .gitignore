@@ -41,3 +41,19 @@ Thumbs.db
 
 # Generated web assets
 src/PoLinks.Web/wwwroot/
+
+# Playwright browser cache (heavy, not needed in repo)
+.playwright/
+
+# .NET SDK/tools cache
+.dotnet/
+
+# Test result files (individual .trx from dotnet test)
+*.trx
+
+# Azure deployment logs and archives
+app-logs/
+logs.zip
+
+# Bicep CLI cache
+~/.bicep/
