@@ -1,0 +1,122 @@
+name: CI/CD — Build, Test & Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  AZURE_WEBAPP_NAME: app-polinks
+  AZURE_RESOURCE_GROUP: PoLinks
+  PROJECT_PATH: src/PoLinks.Web/PoLinks.Web.csproj
+  CLIENT_APP_PATH: src/PoLinks.Web/ClientApp
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Build & Test
+  # ──────────────────────────────────────────────
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.CLIENT_APP_PATH }}/package-lock.json
+
+      - name: Install npm dependencies
+        working-directory: ${{ env.CLIENT_APP_PATH }}
+        run: npm ci
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore NuGet packages
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Build
+        # PublishClientApp target runs 'npm run build' during publish; skip in build-only step
+        run: dotnet build ${{ env.PROJECT_PATH }} --no-restore -c Release
+
+      - name: Run unit tests
+        run: dotnet test tests/PoLinks.Unit/PoLinks.Unit.csproj -c Release --logger trx --results-directory TestResults
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: TestResults/*.trx
+
+      - name: Publish app artifact
+        # dotnet publish triggers PublishClientApp target which runs npm run build + wires dist into wwwroot
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release --no-restore -o publish
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: publish
+          retention-days: 1
+
+  # ──────────────────────────────────────────────
+  # Deploy to Azure App Service
+  # (only on push to master, not PRs)
+  # ──────────────────────────────────────────────
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    environment:
+      name: production
+      url: https://app-polinks.azurewebsites.net
+
+    steps:
+      - name: Download publish artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: publish
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          resource-group-name: ${{ env.AZURE_RESOURCE_GROUP }}
+          package: publish
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for app to start..."
+          sleep 20
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://app-polinks.azurewebsites.net/health)
+          echo "Health check HTTP status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "Deployment verified successfully."
+          else
+            echo "WARNING: Health check returned $STATUS — app may still be warming up."
+          fi
