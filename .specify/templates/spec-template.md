@@ -5,6 +5,12 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+> **PoLinks Constitution alignment** (verify before submitting spec for review):
+> - [ ] Feature scope maps to a single VSA slice (Principle I)
+> - [ ] Acceptance criteria are unambiguous and testable — no open questions (Principle VIII)
+> - [ ] Test categories (Unit C#, Integration C#, E2E TypeScript) noted in requirements (Principle III)
+> - [ ] React offline behaviour described where the feature touches the UI (Principle VI)
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

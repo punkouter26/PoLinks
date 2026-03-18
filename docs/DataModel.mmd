@@ -1,0 +1,78 @@
+erDiagram
+    ANCHOR {
+        string id PK
+        string label
+        string category
+        datetime createdAt
+    }
+
+    SUPER_HUB {
+        string id PK
+        string anchorId FK
+        string label
+        decimal hypeScore
+        string status
+        datetime firstSeenAt
+        datetime expiresAt
+    }
+
+    LINK {
+        string id PK
+        string sourceNodeId FK
+        string targetNodeId FK
+        decimal coOccurrenceStrength
+        decimal pulseSpeed
+    }
+
+    AUTHOR {
+        string did PK
+        string displayName
+        int followerCount
+        decimal authorityWeight
+        bool isInfluencer
+    }
+
+    POST {
+        string uri PK
+        string authorDid FK
+        string linkedNodeId FK
+        decimal impactScore
+        decimal sentimentScore
+        string sentiment
+        datetime createdAt
+    }
+
+    PULSE_BATCH {
+        string id PK
+        datetime firedAt
+        string mostActiveNodeId
+        bool isSimulated
+    }
+
+    NODE_STATE_TRANSITION {
+        string id PK
+        string nodeId FK
+        string fromStatus
+        string toStatus
+        datetime changedAt
+        string reason
+    }
+
+    DIAGNOSTIC_LOG {
+        string correlationId PK
+        datetime timestamp
+        string level
+        string route
+        string message
+    }
+
+    ANCHOR ||--o{ SUPER_HUB : seeds
+    SUPER_HUB ||--o{ LINK : source_or_target
+    SUPER_HUB ||--o{ POST : influenced_by
+    AUTHOR ||--o{ POST : publishes
+    PULSE_BATCH ||--o{ SUPER_HUB : emits_updates
+    SUPER_HUB ||--o{ NODE_STATE_TRANSITION : transitions
+
+    %% enum semantics:
+    %% SUPER_HUB.status = ACTIVE | FADING | EVICTED | EXPIRED
+    %% NODE_STATE_TRANSITION.toStatus follows lifecycle above

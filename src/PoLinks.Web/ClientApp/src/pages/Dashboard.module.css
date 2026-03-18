@@ -1,0 +1,182 @@
+/* UX-6: --top-offset CSS variable coordinates CountdownProgressBar position with banner visibility */
+
+.root {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--colour-bg);
+  color: var(--colour-text-primary);
+  /* Default offset: nav height + widget margin */
+  --top-offset: 64px;
+}
+
+/* When simulation banner is active, push widgets down to avoid overlap.
+   Nav (48px) + banner bar (~34px) + original margin = ~96px */
+.root[data-banner-active] {
+  --top-offset: 96px;
+}
+
+.focusErrorBanner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(127, 29, 29, 0.85);
+  color: #fef2f2;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  z-index: 50;
+  white-space: nowrap;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* Focus-mode anchor name watermark (#5) */
+.focusWatermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(3rem, 10vw, 7rem);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--colour-neon-cyan);
+  opacity: 0.04;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+/* Empty-state onboarding overlay (#8) */
+.onboardingOverlay {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.onboardingHint {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  background: rgba(10, 14, 26, 0.82);
+  border: 1px solid rgba(0, 245, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 18px;
+  text-align: center;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.onboardingDismiss {
+  background: none;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: var(--colour-neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.onboardingDismiss:hover {
+  background: rgba(0, 245, 255, 0.08);
+}
+
+/* Cmd+K node spotlight search overlay (#6) */
+.searchBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+}
+
+.searchModal {
+  width: min(480px, 90vw);
+  background: rgba(14, 20, 38, 0.97);
+  border: 1px solid rgba(0, 245, 255, 0.28);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.searchInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.14);
+  color: var(--colour-text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 14px 18px;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--colour-text-secondary);
+}
+
+.searchResults {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.searchResultItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.searchResultItem:hover {
+  background: rgba(0, 245, 255, 0.07);
+}
+
+.searchResultLabel {
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--colour-text-primary);
+}
+
+.searchResultType {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.searchEmpty {
+  padding: 16px 18px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  margin: 0;
+}

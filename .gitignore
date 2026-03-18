@@ -1,0 +1,43 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Node/Frontend
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Tooling and IDE
+.vscode/
+.vs/
+.idea/
+
+# Logs and temp
+*.log
+*.tmp
+*.swp
+
+# Test and diagnostics artifacts
+TESTRESULTS/
+**/TestResults/
+src/PoLinks.Web/ClientApp/playwright-report/
+src/PoLinks.Web/ClientApp/test-results/
+src/PoLinks.Web/ClientApp/tests/e2e/playwright-report/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated web assets
+src/PoLinks.Web/wwwroot/

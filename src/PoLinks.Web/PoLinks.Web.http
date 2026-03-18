@@ -1,0 +1,61 @@
+@PoLinks.Web_HostAddress = http://localhost:5000
+
+GET {{PoLinks.Web_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/heath
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/diagnostic/health
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/diagnostic/config
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/diagnostic/uptime
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/api/constellation/nexus
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/api/constellation/focus-mode/status
+Accept: application/json
+
+###
+
+POST {{PoLinks.Web_HostAddress}}/api/constellation/focus-mode/enter
+Content-Type: application/json
+
+{
+	"anchorId": "robotics"
+}
+
+###
+
+POST {{PoLinks.Web_HostAddress}}/api/constellation/focus-mode/exit
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/api/snapshot/export-metadata?format=png&scale=2
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{PoLinks.Web_HostAddress}}/scalar/v1

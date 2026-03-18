@@ -1,0 +1,97 @@
+/* UI-4: Insight Panel — glassmorphism + accent border + node-type color theming */
+
+.panel {
+  position: fixed;
+  top: 48px; /* below fixed nav */
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  z-index: 50;
+  background: rgba(10, 14, 26, 0.97);
+  border-left: 1px solid rgba(0, 245, 255, 0.18);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  transform: translateX(340px);
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.panel[data-open="true"] {
+  transform: translateX(0);
+}
+
+/* 3px accent top border, color driven by nodeType via CSS custom prop */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.1);
+  border-top: 3px solid var(--panel-accent, var(--colour-neon-cyan));
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.headerAnchor { --panel-accent: var(--colour-neon-cyan); }
+.headerTopic  { --panel-accent: var(--colour-neon-violet); }
+
+.headerIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.9;
+  color: var(--panel-accent, var(--colour-neon-cyan));
+}
+
+.title {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--colour-neon-cyan);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+/* Improved close button with hover feedback */
+.closeButton {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--colour-text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(0, 245, 255, 0.08);
+  border-color: rgba(0, 245, 255, 0.25);
+  color: var(--colour-text-primary);
+}
+
+.breadcrumbs {
+  padding: 10px 16px 6px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.content {
+  flex: 1;
+  padding: 10px 16px 16px;
+  overflow-y: auto;
+}
+
+.emptyText {
+  color: var(--colour-text-secondary);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 28px;
+  line-height: 1.6;
+}

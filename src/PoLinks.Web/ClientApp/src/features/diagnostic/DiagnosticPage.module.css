@@ -1,0 +1,509 @@
+/* UI-3: Extracted from DiagnosticPage.tsx inline <style> block.
+   Uses design tokens from tokens.css for visual consistency. */
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 24px 32px; /* 48px nav + 24px gap */
+  font-family: var(--font-sans);
+}
+
+.pageHeader {
+  margin-bottom: 32px;
+}
+
+.pageHeader h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--colour-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--colour-text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.section {
+  margin-bottom: 24px;
+  padding: 24px;
+  background: rgba(13, 17, 23, 0.85);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.helpSection {
+  margin-bottom: 24px;
+  padding: 18px 24px;
+  background: rgba(13, 17, 23, 0.85);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Analytics section */
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.analyticsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: rgba(0, 245, 255, 0.05);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 8px;
+}
+
+.analyticsAnchor {
+  font-size: 0.75rem;
+  color: rgba(0, 245, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.analyticsCount {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00f5ff;
+  line-height: 1;
+}
+
+.totalBadge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  background: rgba(0, 245, 255, 0.1);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 20px;
+  color: rgba(0, 245, 255, 0.8);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--colour-text-primary);
+}
+
+.controls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 6px;
+  color: var(--colour-neon-cyan);
+  transition: background 150ms ease;
+  line-height: 1;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: rgba(0, 245, 255, 0.1);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.checkboxLabel {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.checkboxLabel input {
+  cursor: pointer;
+  accent-color: var(--colour-neon-cyan);
+}
+
+.intervalSelect {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: rgba(13, 17, 23, 0.9);
+  color: var(--colour-text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+.intervalSelect:focus {
+  border-color: rgba(0, 245, 255, 0.6);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  color: var(--colour-text-secondary);
+  gap: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(0, 245, 255, 0.12);
+  border-top-color: var(--colour-neon-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  text-align: center;
+  gap: 12px;
+}
+
+.errorMessage {
+  color: var(--colour-neon-red);
+  margin: 0;
+  font-size: 14px;
+}
+
+.retryButton {
+  background: rgba(0, 245, 255, 0.1);
+  color: var(--colour-neon-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.35);
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 150ms ease;
+}
+
+.retryButton:hover {
+  background: rgba(0, 245, 255, 0.2);
+}
+
+.statusCard {
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.statusCard:last-child {
+  margin-bottom: 0;
+}
+
+.overall {
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.statusContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusBadge {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.compact {
+  display: inline-flex;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusIcon {
+  font-size: 18px;
+}
+
+.statusMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+}
+
+.duration {
+  font-weight: 500;
+}
+
+.componentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.componentCard {
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.componentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.componentHeader h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--colour-text-primary);
+  font-family: var(--font-mono);
+}
+
+.componentDescription {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: var(--colour-text-secondary);
+  flex: 1;
+  line-height: 1.5;
+}
+
+.componentFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-muted);
+}
+
+/* Status card theming via data-status attribute (avoids inline styles) */
+.statusCard[data-status="Healthy"] {
+  border-color: var(--colour-neon-cyan);
+  background: rgba(0, 245, 255, 0.08);
+}
+.statusCard[data-status="Degraded"] {
+  border-color: var(--colour-neon-amber, #fbbf24);
+  background: rgba(251, 191, 36, 0.12);
+}
+.statusCard[data-status="Unhealthy"] {
+  border-color: var(--colour-neon-red, #ff6464);
+  background: rgba(255, 100, 100, 0.12);
+}
+
+.statusCard[data-status="Healthy"]   .statusBadge,
+.statusCard[data-status="Healthy"]   .statusIcon { color: var(--colour-neon-cyan); }
+.statusCard[data-status="Degraded"]  .statusBadge,
+.statusCard[data-status="Degraded"]  .statusIcon { color: var(--colour-neon-amber, #fbbf24); }
+.statusCard[data-status="Unhealthy"] .statusBadge,
+.statusCard[data-status="Unhealthy"] .statusIcon { color: var(--colour-neon-red, #ff6464); }
+
+/* Log level colors via data-level attribute */
+.recentLogLevel[data-level="Error"]       { color: var(--colour-neon-red, #ff6464); }
+.recentLogLevel[data-level="Warning"]     { color: var(--colour-neon-amber, #fbbf24); }
+.recentLogLevel[data-level="Information"],
+.recentLogLevel[data-level="Info"]        { color: var(--colour-neon-cyan); }
+.recentLogLevel[data-level="Debug"]       { color: var(--colour-text-muted); }
+
+/* Terminal / Logs section (UX-8) */
+.terminalControls {
+  text-align: center;
+  padding: 16px 0 4px;
+}
+
+.primaryButton {
+  background: rgba(0, 245, 255, 0.1);
+  color: var(--colour-neon-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.primaryButton:hover {
+  background: rgba(0, 245, 255, 0.2);
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.2);
+}
+
+.helpText {
+  margin-top: 10px;
+  color: var(--colour-text-secondary);
+  font-size: 12px;
+}
+
+/* Recent logs preview — UX-8 */
+.recentLogsPreview {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recentLogEntry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.recentLogLevel {
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 56px;
+}
+
+.recentLogMessage {
+  color: var(--colour-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.recentLogTime {
+  color: var(--colour-text-muted);
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+/* Help section */
+.helpSection details {
+  margin: 0;
+}
+
+.helpSection summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--colour-neon-cyan);
+  -webkit-user-select: none;
+  user-select: none;
+  list-style: none;
+}
+
+.helpSection summary::-webkit-details-marker {
+  display: none;
+}
+
+.helpSection summary:hover {
+  opacity: 0.8;
+}
+
+.helpContent {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.helpContent h3 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--colour-text-primary);
+  font-family: var(--font-mono);
+}
+
+.shortcutsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.shortcutsTable tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.shortcutsTable tbody tr:last-child {
+  border-bottom: none;
+}
+
+.shortcutsTable td {
+  padding: 8px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--colour-text-secondary);
+}
+
+.key {
+  font-family: var(--font-mono);
+  background: rgba(0, 245, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--colour-neon-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.25);
+  white-space: nowrap;
+}
+
+.helpContent ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--colour-text-secondary);
+}
+
+.helpContent li {
+  margin-bottom: 6px;
+}
+
+/* Status legend colour classes (avoids inline style on static list items) */
+.legendHealthy   { color: var(--colour-neon-cyan); font-weight: 600; }
+.legendDegraded  { color: var(--colour-neon-amber, #fbbf24); font-weight: 600; }
+.legendUnhealthy { color: var(--colour-neon-red, #ff6464); font-weight: 600; }

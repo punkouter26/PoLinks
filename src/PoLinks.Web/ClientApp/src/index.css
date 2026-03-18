@@ -1,0 +1,57 @@
+:root {
+  color-scheme: dark;
+  font-family: var(--font-sans, Inter, system-ui, sans-serif);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(0, 245, 255, 0.12), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.18), transparent 32%),
+    var(--colour-bg, #0a0e1a);
+  color: var(--colour-text-primary, #f9fafb);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+canvas {
+  display: block;
+}
+
+p {
+  margin: 0;
+}
+
+/* Atmospheric ambient gradient that slowly breathes behind all content */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -30%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 70% at 20% 80%, rgba(124, 58, 237, 0.20), transparent),
+    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(0, 245, 255, 0.09), transparent);
+  animation: ambientDrift 32s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes ambientDrift {
+  0%   { transform: translate(0%,  0%) rotate(0deg); }
+  25%  { transform: translate(3%,  5%) rotate(4deg); }
+  75%  { transform: translate(-3%, 3%) rotate(-3deg); }
+  100% { transform: translate(5%, -4%) rotate(7deg); }
+}

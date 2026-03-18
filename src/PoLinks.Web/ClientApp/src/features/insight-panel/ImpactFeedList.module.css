@@ -1,0 +1,111 @@
+.emptyText {
+  color: var(--colour-text-secondary);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  /* borderLeft kept inline — driven by dynamic post.sentimentColour */
+  padding-left: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0 4px 4px 0;
+  animation: postSlideIn 240ms ease-out both;
+  animation-delay: calc(var(--item-index, 0) * 40ms);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.authorDid {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.impactBadge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--colour-neon-amber);
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.timeBadge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--colour-text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+.sentimentChip {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border-radius: 3px;
+  padding: 1px 5px;
+  /* color, background, border kept inline — driven by post.sentimentColour */
+}
+
+.postText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--colour-text-primary);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+/* Copy-to-clipboard button on each post card */
+.copyButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--colour-text-secondary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.copyButton:hover {
+  color: var(--colour-neon-cyan);
+  background: rgba(0, 245, 255, 0.08);
+}
+
+/* Staggered slide-in for post items */
+@keyframes postSlideIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -8,7 +8,12 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Per the PoLinks Constitution (Principle III — NON-NEGOTIABLE), every **major feature** MUST
+include all three test categories. Include test tasks for every feature unless the spec explicitly
+marks the feature as a non-major change:
+- **Unit tests** (C#) — written first; MUST fail before implementation
+- **Integration tests** (C#) — cover API endpoints and DB interactions via TestContainers
+- **E2E tests** (TypeScript/Playwright) — cover critical user journeys end-to-end
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -18,12 +23,13 @@ description: "Task list template for feature implementation"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Path Conventions
+## Path Conventions (PoLinks — Unified Host / VSA)
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- **Backend (VSA)**: `src/Features/[FeatureName]/` for DTOs, handlers, endpoints
+- **Backend tests**: `tests/Unit/`, `tests/Integration/`
+- **Frontend**: `src/ClientApp/src/features/[feature-name]/`
+- **E2E tests**: `tests/E2E/`
+- Paths shown below assume single-project unified host — adjust only if plan.md specifies otherwise
 
 <!-- 
   ============================================================================

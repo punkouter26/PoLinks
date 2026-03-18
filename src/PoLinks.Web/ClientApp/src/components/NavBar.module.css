@@ -1,0 +1,187 @@
+/* UI-1 & UX-10: NavBar — brand wordmark, hover underline, active glow, Shift+D kbd hint */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  z-index: 100;
+  background: rgba(10, 14, 26, 0.88);
+  border-bottom: 1px solid rgba(0, 245, 255, 0.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 0;
+}
+
+/* Brand wordmark */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 28px;
+  -webkit-user-select: none;
+  user-select: none;
+  text-decoration: none;
+}
+
+.brandDot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--colour-neon-cyan);
+  box-shadow: 0 0 8px var(--colour-neon-cyan);
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--colour-text-primary);
+}
+
+/* Nav links container */
+.links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.link {
+  position: relative;
+  color: var(--colour-text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+/* Animated underline on hover */
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: var(--colour-neon-cyan);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link:hover {
+  color: var(--colour-text-primary);
+  background: rgba(0, 245, 255, 0.06);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
+}
+
+.linkActive {
+  color: var(--colour-neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+}
+
+.linkActive::after {
+  transform: scaleX(1);
+  opacity: 0.6;
+}
+
+/* Keyboard shortcut tooltip — UX-10 */
+.kbdBadge {
+  display: none;
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 14, 26, 0.96);
+  border: 1px solid rgba(0, 245, 255, 0.25);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--colour-neon-cyan);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 200;
+  letter-spacing: 0.06em;
+}
+
+.link:hover .kbdBadge {
+  display: block;
+}
+
+/* Live connection status dot — right side of nav links */
+.statusDot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+  /* Defaults (simulation/offline) */
+  background: #94a3b8;
+  box-shadow: 0 0 5px #94a3b8;
+  transition: background 400ms ease, box-shadow 400ms ease;
+}
+
+.statusDot[data-status="live"] {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e, 0 0 12px rgba(34, 197, 94, 0.4);
+  animation: livePulse 2.5s ease-in-out infinite;
+}
+
+.statusDot[data-status="connecting"] {
+  background: var(--colour-neon-violet);
+  box-shadow: 0 0 6px var(--colour-neon-violet);
+  animation: livePulse 1s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* Reconnect button wrapper — displayed in place of statusDot when in simulation/offline mode */
+.reconnectBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  background: none;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  cursor: pointer;
+  padding: 3px 9px 3px 7px;
+  color: var(--colour-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.reconnectBtn:hover {
+  border-color: var(--colour-neon-cyan);
+  color: var(--colour-neon-cyan);
+  background: rgba(0, 245, 255, 0.06);
+}
+
+.reconnectBtn .statusDot {
+  margin-left: 0;
+  flex-shrink: 0;
+}

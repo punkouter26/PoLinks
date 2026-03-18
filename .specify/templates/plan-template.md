@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+> Based on the **PoLinks Constitution v1.0.0** — all items MUST be ✅ before proceeding.
+
+| # | Principle | Gate Question | Status |
+|---|-----------|---------------|--------|
+| I | Vertical Slice Architecture | Does this feature have a dedicated folder? No cross-feature imports planned? | ⬜ |
+| II | Zero-Waste | Are all files/assets in this PR purposeful? No dead code / commented-out blocks? | ⬜ |
+| III | Comprehensive Testing | Are Unit (C#), Integration (C#), and E2E (TypeScript) tasks planned and written first? | ⬜ |
+| IV | GoF/SOLID | Are all pattern usages annotated with explanatory comments? | ⬜ |
+| V | Observability | Are all error paths logged with context + correlationId? UI error surfacing planned? | ⬜ |
+| VI | Resilient React Client | Does the React UI degrade gracefully if the API is unavailable? | ⬜ |
+| VII | Unified Host | Is the React build served by the .NET app? Single startup confirmed? | ⬜ |
+| VIII | Clarity Before Code | Are all acceptance criteria unambiguous and testable? No open questions deferred? | ⬜ |
 
 ## Project Structure
 

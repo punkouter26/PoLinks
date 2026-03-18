@@ -1,0 +1,59 @@
+/* UX-9: FocusModeControls styles — extracted from inline style objects */
+
+.banner {
+  position: fixed;
+  top: 58px; /* 48px nav + 10px gap */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 245, 255, 0.08);
+  border: 1px solid rgba(0, 245, 255, 0.35);
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--colour-text-primary);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.1);
+}
+
+.anchorName {
+  color: var(--colour-neon-cyan);
+  font-weight: 700;
+}
+
+.exitButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  color: var(--colour-neon-cyan);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.exitButton:hover {
+  background: rgba(0, 245, 255, 0.12);
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+}
+
+/* Keyboard hint badge — UX: shows users the Esc shortcut */
+.kbdHint {
+  font-size: 10px;
+  opacity: 0.6;
+  border: 1px solid rgba(0, 245, 255, 0.35);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}

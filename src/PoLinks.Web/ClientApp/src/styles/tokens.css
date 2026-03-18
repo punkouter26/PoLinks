@@ -1,0 +1,61 @@
+/* T097: Classic Cyber theme design tokens (FR-012).
+  All constellation colours, typography and spacing are defined here as CSS custom properties. */
+
+:root {
+  /* === Palette === */
+  --colour-bg:            #0a0e1a;   /* near-black deep space */
+  --colour-surface:       #111827;   /* card / panel background */
+  --colour-surface-alt:   #1f2937;   /* elevated surface */
+  --colour-border:        #374151;   /* subtle borders */
+
+  --colour-neon-cyan:     #00f5ff;   /* anchor glow, primary accent */
+  --colour-neon-violet:   #7c3aed;   /* topic node fill */
+  --colour-neon-green:    #00ff88;   /* positive sentiment */
+  --colour-neon-amber:    #f59e0b;   /* warning / neutral */
+  --colour-neon-red:      #ef4444;   /* negative sentiment */
+
+  --colour-text-primary:  #f9fafb;
+  --colour-text-secondary:#9ca3af;
+  --colour-text-muted:    #6b7280;
+
+  /* === Link / edge === */
+  --link-opacity:          0.4;
+  --link-stroke-width:     1.5px;
+
+  /* === Node === */
+  --node-anchor-radius:   20px;
+  --node-topic-radius:    8px;
+  --node-anchor-colour:   var(--colour-neon-cyan);
+  --node-topic-colour:    var(--colour-neon-violet);
+
+  /* === Simulation banner === */
+  --banner-bg:            rgba(124, 58, 237, 0.15);
+  --banner-border:        var(--colour-neon-violet);
+  --banner-text:          var(--colour-neon-cyan);
+
+  /* === Countdown bar === */
+  --countdown-track-bg:   var(--colour-surface-alt);
+  --countdown-fill:       var(--colour-neon-cyan);
+  --countdown-height:     4px;
+
+  /* === Typography === */
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-size-xs:  0.75rem;
+  --font-size-sm:  0.875rem;
+  --font-size-base:1rem;
+
+  /* === Spacing === */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* === Z-index layers === */
+  --z-canvas:   10;
+  --z-overlay:  20;
+  --z-banner:   30;
+  --z-modal:    50;
+}
