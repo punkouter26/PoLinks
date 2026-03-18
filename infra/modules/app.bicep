@@ -96,6 +96,9 @@ resource appConfig 'Microsoft.Web/sites/config@2024-04-01' = {
   properties: {
     // App reads the table service URI and uses DefaultAzureCredential (managed identity in Azure)
     AzureStorage__TableServiceUri: 'https://${storage.name}.table.${environment().suffixes.storage}/'
+    ApplicationInsights__ConnectionString: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/secrets/ApplicationInsights--ConnectionString/)'
+    AzureAI__Language__Endpoint: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/secrets/AzureAI--Language--Endpoint/)'
+    AzureAI__Language__ApiKey: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/secrets/AzureAI--Language--ApiKey/)'
     APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
     KeyVault__Uri: 'https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/'
     ASPNETCORE_ENVIRONMENT: 'Production'

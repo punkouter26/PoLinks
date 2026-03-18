@@ -37,8 +37,23 @@ try
     // Azure Key Vault: load secrets before any other service reads configuration
     // -----------------------------------------------------------------------
     var kvUri = builder.Configuration["KeyVault:Uri"];
-    if (!string.IsNullOrEmpty(kvUri))
-        builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+    var hasSentimentEndpoint = !string.IsNullOrWhiteSpace(builder.Configuration["AzureAI:Language:Endpoint"]);
+    var hasSentimentApiKey = !string.IsNullOrWhiteSpace(builder.Configuration["AzureAI:Language:ApiKey"]);
+    var hasAppInsightsConnectionString = !string.IsNullOrWhiteSpace(builder.Configuration["ApplicationInsights:ConnectionString"]);
+
+    if (!string.IsNullOrEmpty(kvUri) && (!hasSentimentEndpoint || !hasSentimentApiKey || !hasAppInsightsConnectionString))
+    {
+        try
+        {
+            builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,
+                "Failed to load Azure Key Vault configuration from {KeyVaultUri}; continuing with existing configuration.",
+                kvUri);
+        }
+    }
 
     var appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
 

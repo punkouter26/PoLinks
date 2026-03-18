@@ -55,9 +55,10 @@ public sealed record SentimentStatusSnapshot(
 /// </summary>
 public sealed class LanguageSentimentService : ISentimentAnalyzer, ISentimentStatus
 {
-    private readonly TextAnalyticsClient _client;
+    private readonly TextAnalyticsClient? _client;
     private readonly ILogger<LanguageSentimentService> _logger;
     private readonly int _dailyCap;
+    private readonly bool _isConfigured;
 
     // Daily-cap tracking — all access under _capLock
     private readonly object _capLock = new();
@@ -72,14 +73,24 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer, ISentimentSta
     {
         _logger = logger;
 
-        var endpoint = configuration["AzureAI:Language:Endpoint"]
-            ?? throw new InvalidOperationException("AzureAI:Language:Endpoint is required.");
-        var apiKey = configuration["AzureAI:Language:ApiKey"]
-            ?? throw new InvalidOperationException("AzureAI:Language:ApiKey is required.");
         _dailyCap = configuration.GetValue<int>("AzureAI:Language:DailyApiCallCap", 3_000);
+
+        var endpoint = configuration["AzureAI:Language:Endpoint"]
+            ?? string.Empty;
+        var apiKey = configuration["AzureAI:Language:ApiKey"]
+            ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            _logger.LogWarning(
+                "Azure AI Language configuration is missing; sentiment analysis is disabled and Neutral will be used.");
+            _isConfigured = false;
+            return;
+        }
 
         _logger.LogInformation("Sentiment daily API cap set to {Cap} text records/day", _dailyCap);
         _client = new TextAnalyticsClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
+        _isConfigured = true;
     }
 
     /// <inheritdoc/>
@@ -96,6 +107,9 @@ public sealed class LanguageSentimentService : ISentimentAnalyzer, ISentimentSta
         if (texts.Count == 0) return [];
 
         var neutral = Enumerable.Repeat(SentimentLabel.Neutral, texts.Count).ToArray();
+
+        if (!_isConfigured || _client is null)
+            return neutral;
 
         if (!TryConsumeQuota(texts.Count))
         {

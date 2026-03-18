@@ -6,9 +6,6 @@ param location string = 'eastus'
 @description('Application short name prefix. Must match solution prefix.')
 param appName string = 'polinks'
 
-@description('Shared resource prefix for cross-app resources.')
-param sharedName string = 'poshared'
-
 @description('Subscription ID for compliance checks.')
 param subscriptionId string = 'Bbb8dfbe-9169-432f-9b7a-fbf861b51037'
 
@@ -16,7 +13,7 @@ param subscriptionId string = 'Bbb8dfbe-9169-432f-9b7a-fbf861b51037'
 param appResourceGroupName string = 'PoLinks'
 
 @description('Shared resource group name.')
-param sharedResourceGroupName string = 'rg-poshared-core-dev'
+param sharedResourceGroupName string = 'PoShared'
 
 @description('App Service SKU kept at low-cost by default.')
 @allowed([
@@ -61,6 +58,15 @@ module appInfra './modules/app.bicep' = {
     storageAccountName: storageAccountName
     keyVaultName: keyVaultName
     sharedResourceGroupName: sharedResourceGroupName
+  }
+}
+
+module keyVaultAccess './modules/keyVaultAccessPolicy.bicep' = {
+  name: 'polinks-keyvault-access'
+  scope: resourceGroup(sharedRg.name)
+  params: {
+    keyVaultName: keyVaultName
+    principalId: appInfra.outputs.appManagedIdentityPrincipalId
   }
 }
 
