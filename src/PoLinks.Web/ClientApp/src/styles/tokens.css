@@ -10,6 +10,7 @@
 
   --colour-neon-cyan:     #00f5ff;   /* anchor glow, primary accent */
   --colour-neon-violet:   #7c3aed;   /* topic node fill */
+  --colour-neon-pink:     #f472b6;   /* expansion post nodes */
   --colour-neon-green:    #00ff88;   /* positive sentiment */
   --colour-neon-amber:    #f59e0b;   /* warning / neutral */
   --colour-neon-red:      #ef4444;   /* negative sentiment */
@@ -23,10 +24,12 @@
   --link-stroke-width:     1.5px;
 
   /* === Node === */
-  --node-anchor-radius:   20px;
-  --node-topic-radius:    8px;
+  --node-anchor-radius:   42px;
+  --node-topic-radius:    22px;
+  --node-post-radius:     16px;
   --node-anchor-colour:   var(--colour-neon-cyan);
   --node-topic-colour:    var(--colour-neon-violet);
+  --node-post-colour:     var(--colour-neon-pink);
 
   /* === Simulation banner === */
   --banner-bg:            rgba(124, 58, 237, 0.15);

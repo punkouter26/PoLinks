@@ -127,13 +127,26 @@ public sealed class ConstellationService(IOptions<ConstellationOptions> options)
 
     /// <summary>
     /// Returns the posts for a specific node sorted by descending ImpactScore.
-    /// Handles both anchor nodes (nodeId == anchorId keyword) and topic nodes
-    /// (nodeId == AuthorDid). Returns null when the node has no posts in the
-    /// current window.
+    /// Handles anchor nodes (nodeId == anchorId keyword), topic nodes (nodeId == AuthorDid),
+    /// and post nodes (nodeId == PostUri, prefixed with "at://").
+    /// Returns null when the node has no posts in the current window.
     /// </summary>
     public NodeInsightData? GetNodeInsight(string nodeId)
     {
         var cutoff = DateTimeOffset.UtcNow - _windowDuration;
+
+        // Post node: nodeId is a PostUri (e.g. "at://did:plc:.../app.bsky.feed.post/...")
+        if (nodeId.StartsWith("at://", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var (anchorId, bag) in _posts)
+            {
+                var post = bag
+                    .FirstOrDefault(p => p.PostUri == nodeId && p.CreatedAt >= cutoff);
+                if (post is not null)
+                    return new NodeInsightData(anchorId, [post]);
+            }
+            return null;
+        }
 
         // Anchor node: nodeId is the keyword (e.g. "robotics")
         if (_posts.TryGetValue(nodeId, out var anchorBag))
@@ -146,17 +159,36 @@ public sealed class ConstellationService(IOptions<ConstellationOptions> options)
                 return new NodeInsightData(nodeId, anchorPosts);
         }
 
-        // Topic node: nodeId is an AuthorDid
+        // Topic node: nodeId is an AuthorDid — return the single highest-impact post only
         foreach (var (anchorId, bag) in _posts)
         {
             var posts = bag
                 .Where(p => p.CreatedAt >= cutoff && p.AuthorDid == nodeId)
                 .OrderByDescending(p => p.ImpactScore)
+                .Take(1)
                 .ToList();
             if (posts.Count > 0)
                 return new NodeInsightData(anchorId, posts);
         }
         return null;
+    }
+
+    /// <summary>
+    /// Returns the top <paramref name="limit"/> posts for the given anchor + keyword,
+    /// ordered by ImpactScore descending. Used to populate the recursive expansion graph.
+    /// </summary>
+    public IReadOnlyList<IngestedPost> GetRelatedPosts(string anchorId, string keyword, int limit = 5)
+    {
+        var cutoff = DateTimeOffset.UtcNow - _windowDuration;
+        if (!_posts.TryGetValue(anchorId, out var bag))
+            return [];
+
+        return bag
+            .Where(p => p.CreatedAt >= cutoff &&
+                        string.Equals(p.MatchedKeyword, keyword, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(p => p.ImpactScore)
+            .Take(limit)
+            .ToList();
     }
 
     /// <summary>Returns true if there are no live posts in the current window.</summary>

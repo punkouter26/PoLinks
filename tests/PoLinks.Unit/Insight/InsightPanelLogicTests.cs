@@ -1,5 +1,6 @@
 // T039: Unit tests for impact score sort and sentiment colour mapping (US2).
 // Tests the sort order invariant and the colour token rules from spec AC-3 and AC-4.
+using Microsoft.Extensions.Options;
 using PoLinks.Web.Features.Constellation;
 using PoLinks.Web.Features.Shared.Entities;
 
@@ -7,12 +8,22 @@ namespace PoLinks.Unit.Insight;
 
 public sealed class InsightPanelLogicTests
 {
+    private static ConstellationService CreateService()
+    {
+        var opts = Options.Create(new ConstellationOptions
+        {
+            MaxNodeCount         = 100,
+            NodeFadeWindowMinutes = 60,
+        });
+        return new ConstellationService(opts);
+    }
+
     // ---- Impact score sort invariant ----------------------------------------
 
     [Fact]
     public void GetNodeInsight_PostsReturnedInDescendingImpactOrder()
     {
-        var svc = new ConstellationService();
+        var svc = CreateService();
         var now  = DateTimeOffset.UtcNow;
         var authorDid = "did:plc:sorttest";
         svc.AddPost(MakePost(authorDid, "anchor1", impact: 1.0, created: now));
@@ -29,7 +40,7 @@ public sealed class InsightPanelLogicTests
     [Fact]
     public void GetNodeInsight_NoPosts_ReturnsNull()
     {
-        var svc = new ConstellationService();
+        var svc = CreateService();
         var result = svc.GetNodeInsight("did:plc:nonexistent");
         result.Should().BeNull();
     }
@@ -37,7 +48,7 @@ public sealed class InsightPanelLogicTests
     [Fact]
     public void GetNodeInsight_OnlyReturnsPostsForRequestedNode()
     {
-        var svc = new ConstellationService();
+        var svc = CreateService();
         var now  = DateTimeOffset.UtcNow;
         svc.AddPost(MakePost("did:plc:aaa", "anchor1", impact: 2.0, created: now));
         svc.AddPost(MakePost("did:plc:bbb", "anchor1", impact: 4.0, created: now));
@@ -51,7 +62,7 @@ public sealed class InsightPanelLogicTests
     [Fact]
     public void GetNodeInsight_CorrectAnchorIdReturned()
     {
-        var svc = new ConstellationService();
+        var svc = CreateService();
         var now  = DateTimeOffset.UtcNow;
         svc.AddPost(MakePost("did:plc:xyz", "robotics", impact: 1.0, created: now));
 

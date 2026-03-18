@@ -9,6 +9,7 @@ import { CountdownProgressBar } from "../features/constellation/CountdownProgres
 import { SimulationBanner } from "../features/simulation/SimulationBanner";
 import { InsightPanel } from "../features/insight-panel/InsightPanel";
 import { useInsightPanelState } from "../features/insight-panel/useInsightPanelState";
+import { useExpansionGraph } from "../features/constellation/useExpansionGraph";
 import { ExportSnapshotButton } from "../features/snapshot/ExportSnapshotButton";
 import { formatApiError } from "../utils/errorMessages";
 import styles from './Dashboard.module.css';
@@ -81,35 +82,46 @@ function DashboardInner() {
   const { insight, isLoading, selectedNodeId, selectNode, error: insightError } = useInsightPanelState();
   const { batches, isSimulated } = usePulseState();
   const { isFocused, focusedAnchorId, enterFocusMode, exitFocusMode, error: focusError } = useFocusMode();
+  const { expansionNodes, expansionLinks, expandNode } = useExpansionGraph(5);
   const navigate = useNavigate();
 
-  const allNodes = Object.values(batches).flatMap((b) => b.nodes);
+  const allNodes = [
+    ...Object.values(batches).flatMap((b) => b.nodes),
+    ...expansionNodes,
+  ];
   const hasTopicNodes = allNodes.some((n) => n.type === 'Topic');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [overlayDismissed, setOverlayDismissed] = useState(false);
   const shouldShowOnboarding = !overlayDismissed && !hasTopicNodes;
 
-  // Derive node type for InsightPanel accent color
+  // Derive node type for InsightPanel accent color — check pulse nodes first, then expansion nodes
   const selectedNodeType = selectedNodeId
-    ? (Object.values(batches).flatMap((b) => b.nodes).find((n) => n.id === selectedNodeId)?.type ?? null)
+    ? (allNodes.find((n) => n.id === selectedNodeId)?.type ?? null)
     : null;
 
   const handleNodeClick = useCallback((nodeId: string) => {
     // Single click: focus on clicked node (enter Focus Mode for Anchors; visual select for Topics)
-    const node = Object.values(batches).flatMap((b) => b.nodes).find((n) => n.id === nodeId);
+    const node = allNodes.find((n) => n.id === nodeId);
     if (node?.type === 'Anchor') {
       enterFocusMode(nodeId).catch(() => undefined);
     } else {
-      // For Topic nodes, single click still selects so the ring renders
+      // For Topic/Post nodes, single click still selects so the ring renders
       selectNode(nodeId);
     }
-  }, [selectNode, batches, enterFocusMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectNode, batches, expansionNodes, enterFocusMode]);
 
   const handleNodeDoubleClick = useCallback((nodeId: string) => {
-    // Double click: open full insight panel for any node type
+    // Double click: always open insight panel AND trigger expansion for Topic/Post nodes
     selectNode(nodeId);
-  }, [selectNode]);
+
+    const node = allNodes.find((n) => n.id === nodeId);
+    if (node && (node.type === 'Topic' || node.type === 'Post')) {
+      expandNode(node);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectNode, expandNode, batches, expansionNodes]);
 
   const handleClose = useCallback(() => {
     selectNode(null);
@@ -159,7 +171,12 @@ function DashboardInner() {
           </div>
         )}
         <ExportSnapshotButton />
-        <ConstellationCanvas onNodeClick={handleNodeClick} onNodeDoubleClick={handleNodeDoubleClick} />
+        <ConstellationCanvas
+          onNodeClick={handleNodeClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
+          expansionNodes={expansionNodes}
+          expansionLinks={expansionLinks}
+        />
         <CountdownProgressBar />
         <InsightPanel
           insight={insight}

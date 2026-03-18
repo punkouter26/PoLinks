@@ -72,6 +72,11 @@ public static class ConstellationEndpoints
            .WithName("GetNodeInsight")
            .WithTags("Constellation");
 
+        // Expansion graph: top related posts for a given anchor + keyword
+        app.MapGet("/api/constellation/related", GetRelatedPosts)
+           .WithName("GetRelatedPosts")
+           .WithTags("Constellation");
+
         // T064: Ghost snapshot endpoint (FR-010)
         app.MapGet("/api/constellation/ghost-snapshots", GetGhostSnapshots)
            .WithName("GetGhostSnapshots")
@@ -117,6 +122,54 @@ public static class ConstellationEndpoints
         )).ToList();
 
         return TypedResults.Ok(new InsightResponseDto(nodeId, raw.AnchorId, roots, posts));
+    }
+
+    /// <summary>
+    /// GET /api/constellation/related?anchorId=&amp;keyword=&amp;limit=5
+    /// Returns the top related posts sharing the given keyword under an anchor.
+    /// Used by the client-side recursive expansion graph feature.
+    /// </summary>
+    private static IResult GetRelatedPosts(
+        [FromQuery] string? anchorId,
+        [FromQuery] string? keyword,
+        [FromQuery] int     limit,
+        ConstellationService constellation,
+        IMockDataService     mockData)
+    {
+        if (string.IsNullOrWhiteSpace(anchorId))
+            return TypedResults.BadRequest(new { error = "anchorId is required" });
+        if (string.IsNullOrWhiteSpace(keyword))
+            return TypedResults.BadRequest(new { error = "keyword is required" });
+
+        var effectiveLimit = limit is >= 1 and <= 20 ? limit : 5;
+
+        IReadOnlyList<IngestedPost> raw = constellation.GetRelatedPosts(anchorId, keyword, effectiveLimit);
+
+        // Fall back to simulation when no live posts are available
+        if (raw.Count == 0 && constellation.IsEmpty)
+        {
+            var mockInsight = mockData.GenerateNodeInsight(anchorId);
+            raw = mockInsight?.Posts
+                .Where(p => string.Equals(p.MatchedKeyword, keyword, StringComparison.OrdinalIgnoreCase))
+                .Take(effectiveLimit)
+                .ToList() ?? [];
+        }
+
+        var posts = raw.Select(p => new InsightPostDto(
+            p.PostUri,
+            p.AuthorDid,
+            p.Text,
+            p.ImpactScore,
+            p.Sentiment.ToString(),
+            InsightSentimentColour.For(p.Sentiment),
+            p.CreatedAt
+        )).ToList();
+
+        return TypedResults.Ok(new InsightResponseDto(
+            NodeId: $"related:{anchorId}:{keyword}",
+            AnchorId: anchorId,
+            SemanticRoots: [],
+            Posts: posts));
     }
 
     /// <summary>

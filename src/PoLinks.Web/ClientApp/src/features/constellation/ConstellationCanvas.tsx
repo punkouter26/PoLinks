@@ -17,15 +17,21 @@ interface Props {
   onNodeClick?: (nodeId: string) => void;
   /** Double click — open the full detail panel for the node. */
   onNodeDoubleClick?: (nodeId: string) => void;
+  /** Expansion Post nodes added by recursive double-click drilldown. */
+  expansionNodes?: NexusNode[];
+  /** Expansion links connecting parent Topic/Post nodes to new Post children. */
+  expansionLinks?: NexusLink[];
 }
 
 interface CanvasTheme {
   colourNeonCyan: string;
   colourNeonViolet: string;
+  colourNeonPink: string;
   colourTextPrimary: string;
   linkOpacity: number;
   nodeAnchorRadius: number;
   nodeTopicRadius: number;
+  nodePostRadius: number;
   fontMono: string;
 }
 
@@ -40,10 +46,12 @@ function getCanvasTheme(): CanvasTheme {
   return {
     colourNeonCyan: css.getPropertyValue("--colour-neon-cyan").trim() || "#00f5ff",
     colourNeonViolet: css.getPropertyValue("--colour-neon-violet").trim() || "#7c3aed",
+    colourNeonPink: css.getPropertyValue("--colour-neon-pink").trim() || "#f472b6",
     colourTextPrimary: css.getPropertyValue("--colour-text-primary").trim() || "#f9fafb",
     linkOpacity: parseCssNumber(css.getPropertyValue("--link-opacity"), 0.4),
     nodeAnchorRadius: parseCssNumber(css.getPropertyValue("--node-anchor-radius"), 20),
     nodeTopicRadius: parseCssNumber(css.getPropertyValue("--node-topic-radius"), 8),
+    nodePostRadius: parseCssNumber(css.getPropertyValue("--node-post-radius"), 16),
     fontMono: css.getPropertyValue("--font-mono").trim() || '"JetBrains Mono", "Fira Code", monospace',
   };
 }
@@ -84,7 +92,12 @@ function getAnchorLabelLines(ctx: CanvasRenderingContext2D, label: string, maxWi
   return [lines[0], lines.slice(1).join(" ")];
 }
 
-export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
+export function ConstellationCanvas({
+  onNodeClick,
+  onNodeDoubleClick,
+  expansionNodes = [],
+  expansionLinks = [],
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { batches, lastPulseAt } = usePulseState();
@@ -143,11 +156,11 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
     resize();
     window.addEventListener("resize", resize);
 
-    // Returns the visual radius for a topic node scaled by its hypeScore (range 4–11 px).
-    // Anchors always use the fixed theme radius.
+    // Returns the visual radius for a node. Anchor, Topic, and Post each have fixed theme radii.
     function getNodeRadius(node: SimNode): number {
       if (node.type === "Anchor") return theme.nodeAnchorRadius;
-      return Math.max(4, Math.min(11, 3 + node.hypeScore * 0.55));
+      if (node.type === "Post")   return theme.nodePostRadius;
+      return theme.nodeTopicRadius;
     }
 
     // Initialise empty simulation
@@ -180,12 +193,14 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
       ctx.translate(transform.x, transform.y);
       ctx.scale(transform.scale, transform.scale);
 
-      // Draw links with edge-weight encoding: width + opacity scale with link count per target node
-      ctx.strokeStyle = theme.colourNeonViolet;
+      // Draw links with edge-weight encoding.
+      // Expansion links (target is a Post) are drawn in neon-pink at lower opacity.
       for (const link of links) {
         const s = link.source as unknown as { x: number; y: number; id: string };
-        const t = link.target as unknown as { x: number; y: number; id: string };
+        const t = link.target as unknown as { x: number; y: number; id: string; type?: string };
         if (s && t) {
+          const isExpansionLink = (t as SimNode).type === "Post";
+          ctx.strokeStyle = isExpansionLink ? theme.colourNeonPink : theme.colourNeonViolet;
           const linkCount = nodeLinkCountRef.current.get(t.id) ?? 1;
           ctx.lineWidth = Math.min(0.8 + linkCount * 0.4, 4);
           ctx.globalAlpha = Math.min(theme.linkOpacity * (0.6 + linkCount * 0.15), 0.8);
@@ -229,7 +244,7 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
           : Math.max(0.3, Math.min(1.0, 0.3 + (node.hypeScore / 10) * 0.7));
         ctx.globalAlpha = nodeAlpha;
 
-        // Heat ring: glow that fades over HEAT_DURATION after a node first appears (#2)
+        // Heat ring — glow that fades over HEAT_DURATION after a node first appears (#2)
         const firstSeen = nodeFirstSeenRef.current.get(node.id);
         if (firstSeen !== undefined) {
           const age = now - firstSeen;
@@ -237,7 +252,11 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
             ctx.globalAlpha = nodeAlpha * (1 - age / HEAT_DURATION) * 0.5;
             ctx.beginPath();
             ctx.arc(nx, ny, r + 9, 0, 2 * Math.PI);
-            ctx.strokeStyle = node.type === "Anchor" ? theme.colourNeonCyan : theme.colourNeonViolet;
+            ctx.strokeStyle = node.type === "Anchor"
+              ? theme.colourNeonCyan
+              : node.type === "Post"
+                ? theme.colourNeonPink
+                : theme.colourNeonViolet;
             ctx.lineWidth = 2.5;
             ctx.stroke();
             ctx.globalAlpha = nodeAlpha;
@@ -246,32 +265,66 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
 
         ctx.beginPath();
         ctx.arc(nx, ny, r, 0, 2 * Math.PI);
-        ctx.fillStyle = node.type === "Anchor" ? theme.colourNeonCyan : theme.colourNeonViolet;
+        // Post nodes use their sentiment colour when available, otherwise neon-pink
+        ctx.fillStyle = node.type === "Anchor"
+          ? theme.colourNeonCyan
+          : node.type === "Post"
+            ? (node.sentimentColour ?? theme.colourNeonPink)
+            : theme.colourNeonViolet;
         ctx.fill();
         if (rendererProfile.enableGlow) {
           ctx.shadowBlur = node.type === "Anchor" ? 18 : (node.hypeScore > 6 ? 8 : 4);
           ctx.shadowColor = ctx.fillStyle;
         }
 
-        // Anchor label
+        // Anchor label — drawn inside the circle, centred vertically
         if (node.type === "Anchor") {
           ctx.globalAlpha = 1.0;
           ctx.fillStyle = theme.colourTextPrimary;
-          ctx.font = `12px ${theme.fontMono}`;
+          ctx.font = `10px ${theme.fontMono}`;
           ctx.textAlign = "center";
-          const labelLines = getAnchorLabelLines(ctx, node.label, 96);
+          ctx.textBaseline = "middle";
+          const labelLines = getAnchorLabelLines(ctx, node.label, r * 1.75);
+          const lineHeight = 13;
+          const totalHeight = (labelLines.length - 1) * lineHeight;
           labelLines.forEach((line, index) => {
-            ctx.fillText(line, nx, ny + r + 15 + index * 13);
+            ctx.fillText(line, nx, ny - totalHeight / 2 + index * lineHeight);
           });
+          ctx.textBaseline = "alphabetic";
         }
 
-        // Topic label: show the matched keyword for high-hype nodes so users can scan meaning at a glance
-        if (node.type === "Topic" && node.topKeyword && node.hypeScore >= 5) {
-          ctx.globalAlpha = nodeAlpha * 0.85;
+        // Post label — first 30 chars of text, truncated, inside the node
+        if (node.type === "Post") {
+          ctx.globalAlpha = nodeAlpha * 0.9;
           ctx.fillStyle = theme.colourTextPrimary;
-          ctx.font = `9px ${theme.fontMono}`;
+          ctx.font = `7px ${theme.fontMono}`;
           ctx.textAlign = "center";
-          ctx.fillText(node.topKeyword, nx, ny + r + 10);
+          ctx.textBaseline = "middle";
+          const maxLabelWidth = r * 1.7;
+          let postLabel = node.label;
+          while (postLabel.length > 2 && ctx.measureText(postLabel).width > maxLabelWidth) {
+            postLabel = postLabel.slice(0, -1);
+          }
+          if (postLabel.length < node.label.length) postLabel = postLabel.slice(0, -1) + "\u2026";
+          ctx.fillText(postLabel, nx, ny);
+          ctx.textBaseline = "alphabetic";
+        }
+
+        // Topic label — keyword truncated to fit inside the node circle
+        if (node.type === "Topic" && node.topKeyword) {
+          ctx.globalAlpha = nodeAlpha * 0.9;
+          ctx.fillStyle = theme.colourTextPrimary;
+          ctx.font = `8px ${theme.fontMono}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const maxLabelWidth = r * 1.7;
+          let label = node.topKeyword;
+          while (label.length > 2 && ctx.measureText(label).width > maxLabelWidth) {
+            label = label.slice(0, -1);
+          }
+          if (label.length < node.topKeyword.length) label = label.slice(0, -1) + "\u2026";
+          ctx.fillText(label, nx, ny);
+          ctx.textBaseline = "alphabetic";
         }
 
         ctx.shadowBlur = 0;
@@ -375,15 +428,26 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
     };
   }, [panZoomRef]); // mount-only behavior; panZoomRef is stable for component lifetime
 
-  // Data effect: update nodes/links refs and reheat the simulation when batches change.
+  // Data effect: update nodes/links refs and reheat the simulation when batches or expansions change.
   // Does NOT rebuild the canvas or RAF loop, preventing node teleportation on each pulse.
   useEffect(() => {
     const simulation = simulationRef.current;
     if (!simulation) return;
 
-    // Flatten batches into arrays
-    const newNodes = Object.values(batches).flatMap((b) => b.nodes) as SimNode[];
-    const newLinks = Object.values(batches).flatMap((b) => b.links) as SimLink[];
+    // Flatten batches into arrays, then merge expansion Post nodes/links
+    const pulseNodes = Object.values(batches).flatMap((b) => b.nodes) as SimNode[];
+    const pulseLinks = Object.values(batches).flatMap((b) => b.links) as SimLink[];
+
+    // Expansion Post nodes are positioned near their parent so the sim doesn't teleport them.
+    const postNodes: SimNode[] = expansionNodes.map((n) => {
+      const existing = (simulationRef.current?.nodes() as SimNode[] | undefined)?.find((sn) => sn.id === n.id);
+      if (existing) return existing; // preserve position across re-renders
+      const parent = (simulationRef.current?.nodes() as SimNode[] | undefined)?.find((sn) => sn.id === expansionLinks.find((l) => l.targetId === n.id)?.sourceId);
+      return { ...n, x: (parent?.x ?? 0) + (Math.random() - 0.5) * 60, y: (parent?.y ?? 0) + (Math.random() - 0.5) * 60 } as SimNode;
+    });
+
+    const newNodes = [...pulseNodes, ...postNodes];
+    const newLinks = [...pulseLinks, ...expansionLinks as SimLink[]];
 
     // Ensure link source/target references point to the actual SimNode objects
     const nodeById = new Map(newNodes.map((n) => [n.id, n]));
@@ -439,7 +503,7 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
     );
     simulation.nodes(newNodes);
     simulation.alpha(0.3).restart();
-  }, [batches, panZoomRef]);
+  }, [batches, expansionNodes, expansionLinks, panZoomRef]);
 
   return (
     <div

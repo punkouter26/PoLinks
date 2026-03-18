@@ -1,5 +1,5 @@
 // Shared TypeScript types mirroring the C# domain contracts in NexusEntities.cs.
-export type NodeType = "Anchor" | "Topic";
+export type NodeType = "Anchor" | "Topic" | "Post";
 export type SentimentLabel = "Positive" | "Neutral" | "Negative";
 
 export interface NexusNode {
@@ -14,6 +14,8 @@ export interface NexusNode {
   authorDid?: string;
   /** Most frequently matched keyword for this author — used as the visible topic label. */
   topKeyword?: string;
+  /** Sentiment colour hex — only present on client-side Post expansion nodes. */
+  sentimentColour?: string;
 }
 
 export interface NexusLink {
@@ -54,3 +56,6 @@ export interface InsightResponse {
   semanticRoots: string[];
   posts:         InsightPost[];
 }
+
+/** Alias: the /related endpoint returns the same shape as InsightResponse. */
+export type RelatedPostsResponse = InsightResponse;
