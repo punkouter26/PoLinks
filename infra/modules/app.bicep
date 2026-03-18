@@ -98,6 +98,8 @@ resource appConfig 'Microsoft.Web/sites/config@2024-04-01' = {
     AzureStorage__TableServiceUri: 'https://${storage.name}.table.${environment().suffixes.storage}/'
     APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
     KeyVault__Uri: 'https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/'
+    ASPNETCORE_ENVIRONMENT: 'Production'
+    WEBSITES_PORT: '8080'
   }
 }
 
