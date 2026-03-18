@@ -38,16 +38,6 @@ resource app 'Microsoft.Web/sites@2024-04-01' = {
     httpsOnly: true
     siteConfig: {
       minTlsVersion: '1.2'
-      appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsights.properties.ConnectionString
-        }
-        {
-          name: 'KeyVault__Uri'
-          value: 'https://${keyVaultName}.vault.azure.net/'
-        }
-      ]
     }
   }
 }
@@ -67,10 +57,47 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
 }
 
-resource appConfig 'Microsoft.Web/sites/config@2024-04-01' = {
-  name: '${app.name}/appsettings'
+// Explicit table resources — ensures tables exist after bicep deploy (idempotent)
+resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-01' = {
+  name: 'default'
+  parent: storage
+}
+
+resource pulseBatchesTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-05-01' = {
+  name: 'PulseBatches'
+  parent: tableService
+}
+
+resource anchorNodesTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-05-01' = {
+  name: 'AnchorNodes'
+  parent: tableService
+}
+
+resource ingestedPostsTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-05-01' = {
+  name: 'IngestedPosts'
+  parent: tableService
+}
+
+// Grant the App Service managed identity Storage Table Data Contributor on this account
+resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  // Storage Table Data Contributor built-in role ID
+  name: guid(storage.id, app.id, '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+  scope: storage
   properties: {
-    'AzureStorage__TableServiceUri': 'https://${storage.name}.table.core.windows.net/'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+    principalId: app.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource appConfig 'Microsoft.Web/sites/config@2024-04-01' = {
+  name: 'appsettings'
+  parent: app
+  properties: {
+    // App reads the table service URI and uses DefaultAzureCredential (managed identity in Azure)
+    AzureStorage__TableServiceUri: 'https://${storage.name}.table.${environment().suffixes.storage}/'
+    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+    KeyVault__Uri: 'https://${keyVaultName}.vault.${environment().suffixes.keyvaultDns}/'
   }
 }
 
@@ -78,3 +105,4 @@ output appNameOut string = app.name
 output appManagedIdentityPrincipalId string = app.identity.principalId
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
 output sharedResourceGroupReference string = sharedResourceGroupName
+output tableServiceUri string = 'https://${storage.name}.table.${environment().suffixes.storage}/'
