@@ -12,6 +12,8 @@ export interface NexusNode {
   firstSeen:  string; // ISO-8601
   lastSeen:   string;
   authorDid?: string;
+  /** Most frequently matched keyword for this author — used as the visible topic label. */
+  topKeyword?: string;
 }
 
 export interface NexusLink {

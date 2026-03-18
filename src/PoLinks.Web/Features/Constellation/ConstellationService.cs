@@ -76,10 +76,13 @@ public sealed class ConstellationService(IOptions<ConstellationOptions> options)
             {
                 var posts = g.ToList();
                 var score = HypeScoreCalculator.Calculate(posts);
+                var topKeyword = posts
+                    .GroupBy(p => p.MatchedKeyword)
+                    .MaxBy(grp => grp.Count())?.Key;
                 return new NexusNode
                 {
                     Id        = g.Key,
-                    Label     = g.Key[..Math.Min(12, g.Key.Length)],
+                    Label     = topKeyword ?? g.Key[..Math.Min(12, g.Key.Length)],
                     Type      = NodeType.Topic,
                     HypeScore = score,
                     Elasticity = 1.0, // recomputed after ranking below
@@ -87,6 +90,7 @@ public sealed class ConstellationService(IOptions<ConstellationOptions> options)
                     FirstSeen = posts.Min(p => p.CreatedAt),
                     LastSeen  = posts.Max(p => p.CreatedAt),
                     AuthorDid = g.Key,
+                    TopKeyword = topKeyword,
                 };
             }).ToList();
 

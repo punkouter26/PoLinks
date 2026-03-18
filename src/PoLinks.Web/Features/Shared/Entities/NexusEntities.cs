@@ -35,6 +35,8 @@ public sealed record NexusNode
     public required DateTimeOffset FirstSeen { get; init; }
     public required DateTimeOffset LastSeen { get; init; }
     public string? AuthorDid { get; init; }
+    /// <summary>Most frequently matched keyword for this author in the current window — used as the visible topic label.</summary>
+    public string? TopKeyword { get; init; }
 }
 
 /// <summary>

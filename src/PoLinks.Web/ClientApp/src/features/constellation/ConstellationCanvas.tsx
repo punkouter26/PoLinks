@@ -143,12 +143,19 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
     resize();
     window.addEventListener("resize", resize);
 
+    // Returns the visual radius for a topic node scaled by its hypeScore (range 4–11 px).
+    // Anchors always use the fixed theme radius.
+    function getNodeRadius(node: SimNode): number {
+      if (node.type === "Anchor") return theme.nodeAnchorRadius;
+      return Math.max(4, Math.min(11, 3 + node.hypeScore * 0.55));
+    }
+
     // Initialise empty simulation
     const simulation = d3
       .forceSimulation<SimNode>()
       .force("charge", d3.forceManyBody().strength(-30))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide<SimNode>().radius((d) => (d.type === "Anchor" ? theme.nodeAnchorRadius + 20 : theme.nodeTopicRadius + 5)));
+      .force("collide", d3.forceCollide<SimNode>().radius((d) => (d.type === "Anchor" ? theme.nodeAnchorRadius + 20 : getNodeRadius(d) + 6)));
     simulationRef.current = simulation;
 
     function ticked() {
@@ -211,22 +218,29 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
       // Draw active nodes
       const HEAT_DURATION = 10_000;
       for (const node of nodes) {
-        const r = node.type === "Anchor" ? theme.nodeAnchorRadius : theme.nodeTopicRadius;
+        const r = getNodeRadius(node);
         const nx = node.x ?? 0;
         const ny = node.y ?? 0;
+
+        // Topic nodes: fade opacity for low-hype nodes so high-hype nodes stand out visually.
+        // Anchors are always fully opaque.
+        const nodeAlpha = node.type === "Anchor"
+          ? 1.0
+          : Math.max(0.3, Math.min(1.0, 0.3 + (node.hypeScore / 10) * 0.7));
+        ctx.globalAlpha = nodeAlpha;
 
         // Heat ring: glow that fades over HEAT_DURATION after a node first appears (#2)
         const firstSeen = nodeFirstSeenRef.current.get(node.id);
         if (firstSeen !== undefined) {
           const age = now - firstSeen;
           if (age < HEAT_DURATION) {
-            ctx.globalAlpha = (1 - age / HEAT_DURATION) * 0.5;
+            ctx.globalAlpha = nodeAlpha * (1 - age / HEAT_DURATION) * 0.5;
             ctx.beginPath();
             ctx.arc(nx, ny, r + 9, 0, 2 * Math.PI);
             ctx.strokeStyle = node.type === "Anchor" ? theme.colourNeonCyan : theme.colourNeonViolet;
             ctx.lineWidth = 2.5;
             ctx.stroke();
-            ctx.globalAlpha = 1.0;
+            ctx.globalAlpha = nodeAlpha;
           }
         }
 
@@ -235,12 +249,13 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
         ctx.fillStyle = node.type === "Anchor" ? theme.colourNeonCyan : theme.colourNeonViolet;
         ctx.fill();
         if (rendererProfile.enableGlow) {
-          ctx.shadowBlur = node.type === "Anchor" ? 18 : 10;
+          ctx.shadowBlur = node.type === "Anchor" ? 18 : (node.hypeScore > 6 ? 8 : 4);
           ctx.shadowColor = ctx.fillStyle;
         }
 
-        // Simple label for anchor
+        // Anchor label
         if (node.type === "Anchor") {
+          ctx.globalAlpha = 1.0;
           ctx.fillStyle = theme.colourTextPrimary;
           ctx.font = `12px ${theme.fontMono}`;
           ctx.textAlign = "center";
@@ -249,7 +264,18 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
             ctx.fillText(line, nx, ny + r + 15 + index * 13);
           });
         }
+
+        // Topic label: show the matched keyword for high-hype nodes so users can scan meaning at a glance
+        if (node.type === "Topic" && node.topKeyword && node.hypeScore >= 5) {
+          ctx.globalAlpha = nodeAlpha * 0.85;
+          ctx.fillStyle = theme.colourTextPrimary;
+          ctx.font = `9px ${theme.fontMono}`;
+          ctx.textAlign = "center";
+          ctx.fillText(node.topKeyword, nx, ny + r + 10);
+        }
+
         ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
 
         // Selection ring — pulsing outline on the selected node (#10)
         if (selectedNodeIdRef.current === node.id) {
@@ -301,7 +327,7 @@ export function ConstellationCanvas({ onNodeClick, onNodeDoubleClick }: Props) {
       for (const node of currentNodesRef.current) {
         const nx = node.x ?? 0;
         const ny = node.y ?? 0;
-        const r = node.type === "Anchor" ? theme.nodeAnchorRadius : theme.nodeTopicRadius;
+        const r = getNodeRadius(node);
         if (Math.sqrt((simX - nx) ** 2 + (simY - ny) ** 2) <= r + 4) return node;
       }
       return null;
